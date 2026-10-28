@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+artifacts/
+.idea/
+*.user
+TestResults/
+pkgbuild/src/
+pkgbuild/pkg/
+pkgbuild/*.pkg.tar.*

@@ -1,0 +1,52 @@
+# Local checkout build. Run `make package` or `make install` from the repository root.
+pkgname=esyuscan
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Omarchy-themed document scanning, powered by the NAPS2 SDK'
+url='https://github.com/AyeCaptn/esyuscan'
+arch=('aarch64' 'x86_64')
+license=('MIT')
+depends=('dotnet-runtime>=10.0' 'dotnet-runtime<11.0' 'gtk3' 'libtiff' 'harfbuzz' 'fontconfig' 'xdg-desktop-portal'
+         'wayland' 'libxkbcommon' 'libglvnd')
+makedepends=('dotnet-sdk>=10.0')
+optdepends=('sane: optional native SANE library and USB scanner backends (matching ARM64/x64)'
+            'sane-airscan: optional SANE network scanner backend'
+            'tesseract: optional searchable PDF OCR engine (native ARM64 or x64)'
+            'tesseract-data-eng: English OCR language data; choose other tesseract-data-* packages for other languages'
+            'system-config-printer: printer settings shortcut'
+            'cups: direct printing (lp, lpstat, cancel) and configured print queues'
+            'xdg-utils: email PDF attachments using xdg-email and a compatible mail client'
+            'xdg-desktop-portal-gtk: file picker backend when selected by the desktop')
+options=('!strip' '!debug')
+
+build() {
+    cd "$startdir/.."
+    local runtime="linux-arm64"
+    [[ "$CARCH" == 'x86_64' ]] && runtime='linux-x64'
+    dotnet restore src/Scan/Scan.csproj --locked-mode
+    dotnet publish src/Scan/Scan.csproj --configuration Release --no-restore \
+        --runtime "$runtime" --no-self-contained -p:UseAppHost=false --output "$srcdir/publish-$runtime"
+}
+
+package() {
+    install -dm755 "$pkgdir/usr/lib/esyuscan"
+    local runtime="linux-arm64"
+    [[ "$CARCH" == 'x86_64' ]] && runtime='linux-x64'
+    cp -a "$srcdir/publish-$runtime/." "$pkgdir/usr/lib/esyuscan/"
+    install -Dm755 "$startdir/esyuscan" "$pkgdir/usr/bin/esyuscan"
+    install -Dm644 "$startdir/esyuscan.desktop" "$pkgdir/usr/share/applications/esyuscan.desktop"
+    install -Dm644 "$startdir/esyuscan.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/esyuscan.svg"
+    install -Dm644 "$startdir/../LICENSE" "$pkgdir/usr/share/licenses/esyuscan/LICENSE"
+    install -Dm644 "$startdir/../THIRD-PARTY.md" "$pkgdir/usr/share/licenses/esyuscan/THIRD-PARTY.md"
+    for guide in "$startdir"/../docs/*.md; do
+        install -Dm644 "$guide" "$pkgdir/usr/share/doc/esyuscan/$(basename "$guide")"
+    done
+    local cache="${NUGET_PACKAGES:-$HOME/.nuget/packages}"
+    for dependency in naps2.sdk naps2.images.gtk naps2.images naps2.internals; do
+        install -Dm644 "$cache/$dependency/1.6.0/LICENSE" \
+            "$pkgdir/usr/share/licenses/esyuscan/$dependency-LICENSE"
+    done
+    install -Dm644 "$cache/naps2.pdfsharp/1.0.2/LICENCE.md" "$pkgdir/usr/share/licenses/esyuscan/naps2.pdfsharp-LICENSE"
+    install -Dm644 "$cache/naps2.pdfium.binaries/1.3.0/LICENSE" \
+        "$pkgdir/usr/share/licenses/esyuscan/naps2.pdfium.binaries-LICENSE"
+}

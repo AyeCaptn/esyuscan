@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=esyuscan
+Comment=Scan a session. Save separate files or one document.
+Exec=esyuscan open
+Icon=esyuscan
+Terminal=false
+StartupWMClass=esyuscan
+Categories=Graphics;Scanning;
+Keywords=scan;scanner;document;PDF;AirScan;

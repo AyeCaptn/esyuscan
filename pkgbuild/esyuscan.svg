@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" aria-label="esyuscan">
+  <rect x="8" y="8" width="112" height="112" rx="18" fill="#a78bda"/>
+  <path d="M38 26h35l19 20v56H38z" fill="#24273a"/>
+  <path d="M73 26v21h19" fill="none" stroke="#a78bda" stroke-width="4"/>
+  <path d="M49 63h31M49 75h31M49 87h22" fill="none" stroke="#a78bda" stroke-width="4"/>
+</svg>

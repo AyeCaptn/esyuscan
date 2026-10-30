@@ -19,9 +19,12 @@ public sealed class CropWindow : Window
     private readonly Image resultPreview = new() { Name = "CropResultPreview", Stretch = Stretch.Uniform };
     private readonly NumericUpDown[] fields;
     private readonly Button apply = new() { Name = "ApplyCrop", Content = "Apply crop · Enter", IsDefault = true, Classes = { "primary" } };
-    private readonly TextBlock error = new() { TextWrapping = TextWrapping.Wrap };
+    private readonly TextBlock error = new() { Name = "CropStatus", TextWrapping = TextWrapping.Wrap };
+    private readonly SemaphoreSlim renderGate = new(1);
+    private CancellationTokenSource? rendering;
     private Bitmap? croppedPreview;
     private bool updating;
+    private bool closed;
 
     public CropWindow(Session session, SessionPage page)
     {
@@ -34,7 +37,12 @@ public sealed class CropWindow : Window
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         deskewedCanvas = PageRenderer.Render(session, page with { Crop = null, Rotation = 0, Adjustments = null });
         (originalWidth, originalHeight) = (deskewedCanvas.Width, deskewedCanvas.Height);
-        using (var png = PageRenderer.Png(deskewedCanvas, null, page.Rotation)) fullPage = new Bitmap(png);
+        try
+        {
+            using var png = PageRenderer.Png(deskewedCanvas, null, page.Rotation);
+            fullPage = new Bitmap(png);
+        }
+        catch { deskewedCanvas.Dispose(); throw; }
         var crop = page.Crop ?? new PageCrop(0, 0, originalWidth, originalHeight);
         var width = originalWidth;
         var height = originalHeight;
@@ -91,13 +99,25 @@ public sealed class CropWindow : Window
         Content = layout;
         var names = new NameScope();
         NameScope.SetNameScope(this, names);
-        foreach (var control in new Control[] { apply, cancel, reset, selection, resultPreview }.Concat(fields))
+        foreach (var control in new Control[] { apply, cancel, reset, selection, resultPreview, error }.Concat(fields))
             names.Register(control.Name!, control);
-        Closed += (_, _) => { resultPreview.Source = null; croppedPreview?.Dispose(); fullPage.Dispose(); deskewedCanvas.Dispose(); };
+        Closed += async (_, _) =>
+        {
+            closed = true;
+            rendering?.Cancel();
+            resultPreview.Source = null;
+            croppedPreview?.Dispose();
+            fullPage.Dispose();
+            // An in-flight render owns the cached canvas until it releases the gate.
+            await renderGate.WaitAsync();
+            try { deskewedCanvas.Dispose(); }
+            finally { renderGate.Release(); }
+        };
         UpdateFields();
     }
 
     public PageCrop? Result { get; private set; }
+    public Task PreviewReady { get; private set; } = Task.CompletedTask;
 
     private void UpdateFields()
     {
@@ -106,12 +126,14 @@ public sealed class CropWindow : Window
         var values = new[] { crop.X, crop.Y, crop.Width, crop.Height };
         for (var i = 0; i < fields.Length; i++) fields[i].Value = values[i];
         updating = false;
-        UpdatePreview(crop);
+        QueuePreview(crop);
     }
 
     private void ReadFields()
     {
-        if (updating) return;
+        if (updating || closed) return;
+        rendering?.Cancel();
+        apply.IsEnabled = false;
         if (fields.Any(field => field.Value is null || field.Value != decimal.Truncate(field.Value.Value)))
         {
             apply.IsEnabled = false;
@@ -120,25 +142,57 @@ public sealed class CropWindow : Window
         }
         var crop = new PageCrop((int)fields[0].Value!.Value, (int)fields[1].Value!.Value,
             (int)fields[2].Value!.Value, (int)fields[3].Value!.Value);
-        UpdatePreview(crop);
-        if (apply.IsEnabled) selection.Selection = crop;
+        if (QueuePreview(crop)) selection.Selection = crop;
     }
 
-    private void UpdatePreview(PageCrop displayed)
+    private bool QueuePreview(PageCrop displayed)
     {
+        rendering?.Cancel();
+        apply.IsEnabled = false;
         try
         {
             var crop = PageCrop.FromDisplay(displayed, page.Rotation, originalWidth, originalHeight);
             Result = crop == new PageCrop(0, 0, originalWidth, originalHeight) ? null : crop;
-            using var png = PageRenderer.Png(deskewedCanvas, Result, page.Rotation, page.Adjustments);
-            var next = new Bitmap(png);
-            resultPreview.Source = next;
-            croppedPreview?.Dispose();
-            croppedPreview = next;
-            apply.IsEnabled = true;
-            error.Text = "Changes are saved only when you apply. Full page removes the crop.";
         }
-        catch (InvalidDataException exception) { apply.IsEnabled = false; error.Text = exception.Message; }
+        catch (InvalidDataException exception) { error.Text = exception.Message; return false; }
+        var cancellation = new CancellationTokenSource();
+        rendering = cancellation;
+        error.Text = "Rendering preview…";
+        PreviewReady = UpdatePreview(Result, cancellation);
+        return true;
+    }
+
+    private async Task UpdatePreview(PageCrop? crop, CancellationTokenSource cancellation)
+    {
+        var token = cancellation.Token;
+        try
+        {
+            await Task.Delay(150, token);
+            await renderGate.WaitAsync(token);
+            try
+            {
+                using var png = await Task.Run(() => PageRenderer.Png(deskewedCanvas, crop, page.Rotation, page.Adjustments, token), token);
+                token.ThrowIfCancellationRequested();
+                if (closed) return;
+                var next = new Bitmap(png);
+                resultPreview.Source = next;
+                croppedPreview?.Dispose();
+                croppedPreview = next;
+                apply.IsEnabled = true;
+                error.Text = "Changes are saved only when you apply. Full page removes the crop.";
+            }
+            finally { renderGate.Release(); }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception exception)
+        {
+            if (!closed && !token.IsCancellationRequested) error.Text = "Couldn't render the crop: " + exception.Message;
+        }
+        finally
+        {
+            if (ReferenceEquals(rendering, cancellation)) rendering = null;
+            cancellation.Dispose();
+        }
     }
 }
 

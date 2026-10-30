@@ -764,6 +764,7 @@ public sealed class UiTests : TestFiles
             editor.FindControl<NumericUpDown>("CropTop")!.Value = 6;
             editor.FindControl<NumericUpDown>("CropWidth")!.Value = 40;
             editor.FindControl<NumericUpDown>("CropHeight")!.Value = 30;
+            await editor.PreviewReady;
             Assert.That(editor.Result, Is.EqualTo(new PageCrop(6, 43, 30, 40)));
             using (var expectedPng = PageRenderer.Png(session, original with { Crop = editor.Result }))
             using (var actualPng = new MemoryStream())
@@ -784,6 +785,7 @@ public sealed class UiTests : TestFiles
             Assert.That(editor.FindControl<Button>("ApplyCrop")!.IsEnabled, Is.False);
             editor.FindControl<NumericUpDown>("CropWidth")!.Value = 40;
             editor.FindControl<NumericUpDown>("CropHeight")!.Value = 30;
+            await editor.PreviewReady;
             var expected = editor.Result;
             editor.FindControl<Button>("ApplyCrop")!.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
             await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { });
@@ -862,16 +864,17 @@ public sealed class UiTests : TestFiles
     }
 
     [AvaloniaTest, Category("Integration")]
-    public void RenderCropEditor()
+    public async Task RenderCropEditor()
     {
         using var session = CreateSession();
         AddPages(session, 1, detailed: true);
         session.SetCrop(0, new PageCrop(40, 50, 540, 760));
         var window = new CropWindow(session, session.Pages[0]);
         window.Show();
-        window.UpdateLayout();
         try
         {
+            await window.PreviewReady;
+            window.UpdateLayout();
             using var bitmap = new RenderTargetBitmap(new PixelSize(980, 760), new Vector(96, 96));
             bitmap.Render(window);
             var folder = Environment.GetEnvironmentVariable("ESYUSCAN_SCREENSHOT_DIR");

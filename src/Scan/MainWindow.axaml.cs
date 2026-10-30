@@ -384,22 +384,34 @@ public sealed partial class MainWindow : Window
         });
     }
 
+    private bool editingPage;
+
     private async void CropPage(object? sender, RoutedEventArgs args) => await HandleUi(async () =>
     {
-        if (!model.CanChangePage) return;
-        var index = model.Pages.IndexOf(model.SelectedPage!);
-        var editor = new CropWindow(model.Session!, model.Session!.Pages[index]);
-        if (await editor.ShowDialog<bool>(this))
-            Edit((session, pageIndex) => session.SetCrop(pageIndex, editor.Result));
+        if (editingPage || !model.CanChangePage) return;
+        editingPage = true;
+        try
+        {
+            var index = model.Pages.IndexOf(model.SelectedPage!);
+            var editor = new CropWindow(model.Session!, model.Session!.Pages[index]);
+            if (await editor.ShowDialog<bool>(this))
+                Edit((session, pageIndex) => session.SetCrop(pageIndex, editor.Result));
+        }
+        finally { editingPage = false; }
     });
 
     private async void AdjustPage(object? sender, RoutedEventArgs args) => await HandleUi(async () =>
     {
-        if (!model.CanChangePage) return;
-        var index = model.Pages.IndexOf(model.SelectedPage!);
-        var editor = new AdjustmentsWindow(model.Session!, model.Session!.Pages[index]);
-        if (await editor.ShowDialog<bool>(this))
-            Edit((session, pageIndex) => session.SetEdits(pageIndex, editor.Result));
+        if (editingPage || !model.CanChangePage) return;
+        editingPage = true;
+        try
+        {
+            var index = model.Pages.IndexOf(model.SelectedPage!);
+            var editor = new AdjustmentsWindow(model.Session!, model.Session!.Pages[index]);
+            if (await editor.ShowDialog<bool>(this))
+                Edit((session, pageIndex) => session.SetEdits(pageIndex, editor.Result));
+        }
+        finally { editingPage = false; }
     });
 
     private void EditSelection(Action action)

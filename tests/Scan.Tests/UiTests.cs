@@ -48,7 +48,7 @@ public sealed class UiTests : TestFiles
 
             Assert.That(labelLeft - squareRight, Is.EqualTo(8));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -67,7 +67,7 @@ public sealed class UiTests : TestFiles
         {
             Assert.That(window.FindControl<ScrollViewer>("PreviewScroller")!.Viewport.Height, Is.GreaterThan(height * 0.6));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -90,7 +90,7 @@ public sealed class UiTests : TestFiles
             var saved = store.Load().Preferences.Presets.Single();
             Assert.That((saved.Name, saved.Settings.Dpi), Is.EqualTo(("Receipts", 600)));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -105,7 +105,7 @@ public sealed class UiTests : TestFiles
 
             Assert.That(progress.Bounds.Size, Is.EqualTo(new Size(112, 4)));
         }
-        finally { model.Busy = false; window.Close(); }
+        finally { model.Busy = false; window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -124,7 +124,7 @@ public sealed class UiTests : TestFiles
 
             Assert.That(printBottom, Is.EqualTo(exportBottom).Within(1));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -144,7 +144,7 @@ public sealed class UiTests : TestFiles
 
             Assert.That(progressCenter, Is.EqualTo(statusCenter).Within(1));
         }
-        finally { model.Busy = false; window.Close(); }
+        finally { model.Busy = false; window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -165,7 +165,7 @@ public sealed class UiTests : TestFiles
 
             Assert.That(bottom, Is.LessThanOrEqualTo(scroller.Bounds.Height));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -183,7 +183,7 @@ public sealed class UiTests : TestFiles
 
             Assert.That(settings.Flyout!.IsOpen, Is.True);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -204,7 +204,7 @@ public sealed class UiTests : TestFiles
 
             Assert.That(model.CurrentScanSettings().AutoDeskew, Is.True);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -248,7 +248,7 @@ public sealed class UiTests : TestFiles
             Assert.That(window.FindControl<Button>("AddManualDeviceButton")!.IsEffectivelyEnabled, Is.False);
             Assert.That(window.FindControl<Button>("CancelButton")!.IsEffectivelyEnabled, Is.True);
         }
-        finally { model.Busy = false; window.Close(); }
+        finally { model.Busy = false; window.CloseForTest(); }
     }
 
     [AvaloniaTest, Category("Integration")]
@@ -280,7 +280,7 @@ public sealed class UiTests : TestFiles
             Assert.That(model.GeometryDiagram!.Area, Is.EqualTo(new ScanRegion(10, 15, 80, 120)));
             Assert.That(model.HasValidScanSettings, Is.True);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -295,7 +295,7 @@ public sealed class UiTests : TestFiles
         window.Show();
 
         try { Assert.That(model.CanExport, Is.True); }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -314,7 +314,7 @@ public sealed class UiTests : TestFiles
         window.Show();
 
         try { Assert.That(window.FindControl<Button>("CancelButton")!.IsEffectivelyEnabled, Is.True); }
-        finally { model.Busy = false; window.Close(); }
+        finally { model.Busy = false; window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -343,7 +343,7 @@ public sealed class UiTests : TestFiles
             Assert.That(model.IndeterminateProgress, Is.False);
             Assert.That(window.FindControl<Button>("CancelButton")!.IsEffectivelyEnabled, Is.True);
         }
-        finally { model.Busy = false; window.Close(); }
+        finally { model.Busy = false; window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -372,7 +372,7 @@ public sealed class UiTests : TestFiles
         window.KeyPressQwerty(PhysicalKey.R, RawInputModifiers.None);
 
         try { Assert.That(session.Pages[0].Rotation, Is.EqualTo(90)); }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest, Category("Integration")]
@@ -404,7 +404,7 @@ public sealed class UiTests : TestFiles
             Assert.That(model.Pages.Count, Is.EqualTo(2));
             Assert.That(session.Pages[1].PdfSource, Is.EqualTo(original.PdfSource));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -425,7 +425,7 @@ public sealed class UiTests : TestFiles
                 Assert.That(rightEdge, Is.LessThanOrEqualTo(window.ClientSize.Width));
                 Assert.That(languageBottom, Is.LessThanOrEqualTo(window.ClientSize.Height));
             }
-            finally { window.Close(); }
+            finally { window.CloseForTest(); }
         }
     }
 
@@ -477,7 +477,7 @@ public sealed class UiTests : TestFiles
             window.KeyPressQwerty(PhysicalKey.Z, RawInputModifiers.Control | RawInputModifiers.Shift);
             Assert.That(session.Pages[2], Is.EqualTo(raw[4] with { Rotation = 180 }));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -583,7 +583,7 @@ public sealed class UiTests : TestFiles
                 bitmap.Save(Path.Combine(folder, $"manual-duplex-{width}.png"), new PngBitmapEncoderOptions());
             }
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -646,7 +646,7 @@ public sealed class UiTests : TestFiles
             });
             RememberedScanSettings StoreLast() => store.Load().Preferences.LastScan!;
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -691,7 +691,7 @@ public sealed class UiTests : TestFiles
                 Dispatcher.UIThread.RunJobs();
             }
         }
-        finally { model.Busy = false; window.Close(); }
+        finally { model.Busy = false; window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -715,7 +715,7 @@ public sealed class UiTests : TestFiles
                 Assert.That(bottom, Is.LessThanOrEqualTo(window.ClientSize.Height - 104), control);
             }
         }
-        finally { model.Busy = false; window.Close(); }
+        finally { model.Busy = false; window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -741,7 +741,7 @@ public sealed class UiTests : TestFiles
             Dispatcher.UIThread.RunJobs();
             Assert.That(window.FindControl<Button>("ScanButton")!.IsEffectivelyEnabled, Is.True);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -794,7 +794,7 @@ public sealed class UiTests : TestFiles
             Assert.That(session.Pages[0], Is.EqualTo(original));
             Assert.That(model.Preview!.PixelSize, Is.EqualTo(new PixelSize(88, 62)));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -858,7 +858,7 @@ public sealed class UiTests : TestFiles
             var toolbar = window.FindControl<Panel>("PageToolbar")!;
             Assert.That(toolbar.TranslatePoint(new Point(0, 0), window)!.Value.X, Is.GreaterThanOrEqualTo(268));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest, Category("Integration")]
@@ -925,6 +925,6 @@ public sealed class UiTests : TestFiles
             }
             Assert.That(window.FindControl<ListBox>("PageTray")!.ItemCount, Is.EqualTo(8));
         }
-        finally { model.Busy = false; window.Close(); }
+        finally { model.Busy = false; window.CloseForTest(); }
     }
 }

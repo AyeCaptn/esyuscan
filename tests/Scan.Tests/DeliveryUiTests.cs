@@ -37,7 +37,7 @@ public sealed class DeliveryUiTests : TestFiles
             model.RefreshDuplex();
             Assert.That(print.IsEffectivelyEnabled || email.IsEffectivelyEnabled, Is.False);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]

@@ -24,6 +24,12 @@ public sealed partial class MainWindow : Window
         Func<IScannerDiscovery>? scannerDiscoveryFactory = null, Func<CancellationToken, Task<OcrAvailability>>? ocrProbe = null)
     {
         this.model = model;
+        if (model.Session is null)
+        {
+            var initialStatus = model.Status;
+            model.SetSession(Session.CreateTemporary());
+            model.Status = initialStatus;
+        }
         desktopCommand ??= new DesktopCommand();
         printing = new CupsPrinting(desktopCommand);
         mail = new DesktopMail(desktopCommand);
@@ -71,22 +77,36 @@ public sealed partial class MainWindow : Window
     {
         opened = true;
         if (!discover) return;
-        try
-        {
-            if (Program.SessionArgument is not null) model.SetSession(Session.Open(Program.SessionArgument));
-        }
-        catch (Exception error) { model.Error = error.Message; }
+        if (Program.ImportArguments.Length > 0) _ = ImportPathsAsync(Program.ImportArguments);
         _ = CheckSelectedScannerAsync();
         _ = RefreshScannersAsync();
         _ = RefreshOcrAsync();
     }
 
-    private void OnClosing(object? sender, WindowClosingEventArgs args)
+    private bool closeConfirmed;
+    private bool confirmingClose;
+
+    private async void OnClosing(object? sender, WindowClosingEventArgs args)
     {
-        if (!model.Busy) return;
+        if (model.Busy)
+        {
+            args.Cancel = true;
+            operation?.Cancel();
+            model.Status = "Stopping safely. Close again when the operation ends; you will be asked before discarding unsaved scans.";
+            return;
+        }
+        if (closeConfirmed || !model.HasUnsavedScans) return;
         args.Cancel = true;
-        operation?.Cancel();
-        model.Status = "Stopping safely. Completed pages are saved; close again when the operation ends.";
+        if (confirmingClose) return;
+        confirmingClose = true;
+        try
+        {
+            if (!await ConfirmDiscardAsync(closing: true) || model.Busy) return;
+            closeConfirmed = true;
+            Close();
+        }
+        catch (Exception error) { model.Error = error.Message; }
+        finally { confirmingClose = false; }
     }
 
     private async Task Run(Func<CancellationToken, Task> action)
@@ -97,11 +117,11 @@ public sealed partial class MainWindow : Window
         model.Busy = true;
         model.Error = "";
         try { await action(cancellation.Token); }
-        catch (OperationCanceledException) { model.Status = "Stopped. Completed pages are safely saved."; }
+        catch (OperationCanceledException) { model.Status = "Stopped. Completed pages are in temporary storage. Save to keep them."; }
         catch (Exception error)
         {
             model.Error = error.Message;
-            model.Status = "Couldn't finish. Your saved pages are safe.";
+            model.Status = "Couldn't finish. Save your completed pages before closing.";
             Console.Error.WriteLine(error);
         }
         finally { operation = null; model.Busy = false; model.Progress = 0; model.ExportProgress = false; }
@@ -191,37 +211,37 @@ public sealed partial class MainWindow : Window
     private async Task NewSessionAsync()
     {
         if (!model.CanEdit) return;
-        var name = await Prompt("New scan session", "Session name", "Documents");
-        if (name is null) return;
-        var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
-        {
-            Title = "Choose where to keep the new session folder",
-            AllowMultiple = false
-        });
-        if (folders.Count == 0) return;
-        await Run(_ =>
-        {
-            var parent = folders[0].TryGetLocalPath() ?? throw new IOException("Choose a local folder.");
-            var slug = string.Concat(name.Select(c => char.IsLetterOrDigit(c) || c is '-' or '_' ? c : '-')).Trim('-');
-            if (slug.Length == 0) throw new ArgumentException("Use at least one letter or number in the session name.");
-            var path = Path.Combine(parent, $"{DateTime.Now:yyyy-MM-dd-HHmmss}-{slug}");
-            model.SetSession(Session.Create(path, name));
-            return Task.CompletedTask;
-        });
+        if (model.HasUnsavedScans && !await ConfirmDiscardAsync()) return;
+        model.SetSession(Session.CreateTemporary());
     }
 
-    private async void OpenSession(object? sender, RoutedEventArgs args) => await HandleUi(OpenSessionAsync);
-
-    private async Task OpenSessionAsync()
+    private async Task<bool> ConfirmDiscardAsync(bool closing = false)
     {
-        if (!model.CanEdit) return;
-        var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Open an esyuscan session", AllowMultiple = false });
-        if (folders.Count == 0) return;
-        await Run(_ =>
+        var dialog = new Window
         {
-            model.SetSession(Session.Open(folders[0].TryGetLocalPath() ?? throw new IOException("Choose a local folder.")));
-            return Task.CompletedTask;
-        });
+            Title = closing ? "Close with unsaved scans?" : "Discard unsaved scans?",
+            Width = 460,
+            SizeToContent = SizeToContent.Height,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
+        var discard = new Button { Name = "DiscardScansButton", Content = closing ? "Discard and close" : "Discard and start new", Classes = { "primary" } };
+        var cancel = new Button { Name = "KeepScansButton", Content = "Cancel · Esc", IsCancel = true, IsDefault = true };
+        discard.Click += (_, _) => dialog.Close(true);
+        cancel.Click += (_, _) => dialog.Close(false);
+        dialog.Content = new StackPanel
+        {
+            Margin = new Avalonia.Thickness(24),
+            Spacing = 18,
+            Children =
+            {
+                new TextBlock { Text = closing
+                    ? "Are you sure you want to close? Your unsaved scans will be deleted. Cancel and Save first to keep them."
+                    : "Your current scans have not all been saved. Starting new deletes them. Cancel and Save first to keep them.", TextWrapping = Avalonia.Media.TextWrapping.Wrap },
+                new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, Children = { cancel, discard } }
+            }
+        };
+        return await dialog.ShowDialog<bool>(this);
     }
 
     private async void ImportFiles(object? sender, RoutedEventArgs args) => await HandleUi(ImportFilesAsync);
@@ -229,7 +249,6 @@ public sealed partial class MainWindow : Window
     private async Task ImportFilesAsync()
     {
         if (!model.CanEdit) return;
-        if (!model.HasSession) { model.Error = "Create or open a session before importing PDFs or images."; return; }
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = "Import PDFs or images",
@@ -237,15 +256,17 @@ public sealed partial class MainWindow : Window
             FileTypeFilter = [new FilePickerFileType("PDFs and images") { Patterns = ["*.pdf", "*.png", "*.jpg", "*.jpeg", "*.tif", "*.tiff", "*.bmp"] }, FilePickerFileTypes.Pdf]
         });
         if (files.Count == 0) return;
-        await Run(async token =>
-        {
-            var paths = files.Select(file => file.TryGetLocalPath() ?? throw new IOException("Choose local PDF or image files.")).ToArray();
-            model.Status = "Importing PDFs and images… Completed pages are saved as they arrive.";
-            await Task.Run(() => Engine.Import(model.Session!, paths, RefreshPages, token), token);
-            model.SyncPages();
-            model.Status = $"Import complete. {model.PageCount} saved in this session.";
-        });
+        var paths = files.Select(file => file.TryGetLocalPath() ?? throw new IOException("Choose local PDF or image files.")).ToArray();
+        await ImportPathsAsync(paths);
     }
+
+    private Task ImportPathsAsync(string[] paths) => Run(async token =>
+    {
+        model.Status = "Importing PDFs and images into temporary storage…";
+        await Task.Run(() => Engine.Import(model.Session!, paths, RefreshPages, token), token);
+        model.SyncPages();
+        model.Status = $"Import complete. {model.PageCount}. Save to keep these scans.";
+    });
 
     private async void ScanPages(object? sender, RoutedEventArgs args)
     {
@@ -254,10 +275,10 @@ public sealed partial class MainWindow : Window
         {
             if (model.SelectedColor is null || model.Dpi == 0) throw new InvalidOperationException("The scanner did not provide supported color or resolution settings.");
             model.RememberCurrentSettings();
-            model.Status = "Scanning… Completed pages are saved as they arrive.";
+            model.Status = "Scanning into temporary storage… Save when finished.";
             await Engine.Scan(model.Session!, model.CurrentScanSettings(), RefreshPages,
                 progress => Dispatcher.UIThread.Post(() => model.Progress = progress), token);
-            model.Status = $"Scan complete. {model.PageCount} saved. Scan again or choose an export below.";
+            model.Status = $"Scan complete. {model.PageCount} ready. Scan again or Save below.";
         });
     }
 
@@ -305,13 +326,13 @@ public sealed partial class MainWindow : Window
         await Run(async token =>
         {
             if (model.SelectedColor is null || model.Dpi == 0) throw new InvalidOperationException("Select a supported color and resolution.");
-            model.Status = backs ? "Scanning backs. Completed sides are saved immediately." : "Scanning fronts. Completed sides are saved immediately.";
+            model.Status = backs ? "Scanning backs into temporary storage." : "Scanning fronts into temporary storage.";
             try
             {
                 await model.Session!.ScanDuplexPass(backs, scanToken => Engine.Scan(model.Session,
                     model.CurrentScanSettings(),
                     RefreshPages, progress => Dispatcher.UIThread.Post(() => model.Progress = progress), scanToken), token);
-                model.Status = backs ? "Review every pair and orientation, then apply." : "Fronts saved. Reload the stack following the instructions, then scan backs.";
+                model.Status = backs ? "Review every pair and orientation, then apply." : "Fronts captured. Reload the stack following the instructions, then scan backs.";
             }
             finally { model.RefreshDuplex(); }
         });
@@ -330,7 +351,7 @@ public sealed partial class MainWindow : Window
         catch (Exception error) { model.Error = error.Message; }
     }
 
-    private void RefreshPages() => Dispatcher.UIThread.Post(() => model.SyncPages());
+    private void RefreshPages() => Dispatcher.UIThread.Post(() => { if (!closed) model.SyncPages(); });
     private void CancelOperation(object? sender, RoutedEventArgs args) => operation?.Cancel();
 
     private void Edit(Action<Session, int> action)
@@ -342,7 +363,7 @@ public sealed partial class MainWindow : Window
             action(model.Session!, index);
             model.SyncPages();
             model.Error = "";
-            model.Status = "Changes saved. Undo is available; originals are preserved.";
+            model.Status = "Changes kept in temporary storage. Save to keep them after closing.";
         }
         catch (Exception error) { model.Error = error.Message; }
     }
@@ -359,7 +380,7 @@ public sealed partial class MainWindow : Window
             token.ThrowIfCancellationRequested();
             model.Session!.SetDeskew(index, angle);
             model.SyncPages();
-            model.Status = $"Deskew saved ({angle:0.0}°). Undo restores the previous edit.";
+            model.Status = $"Deskew applied ({angle:0.0}°). Undo restores the previous edit.";
         });
     }
 
@@ -394,7 +415,13 @@ public sealed partial class MainWindow : Window
 
     private async void ExportImages(object? sender, RoutedEventArgs args) => await HandleUi(() => Export(ExportFormat.Images));
     private async void ExportPdfs(object? sender, RoutedEventArgs args) => await HandleUi(() => Export(ExportFormat.SeparatePdfs));
-    private async void ExportDocument(object? sender, RoutedEventArgs args) => await HandleUi(() => Export(ExportFormat.CombinedPdf));
+    private async void ExportDocument(object? sender, RoutedEventArgs args) => await HandleUi(() =>
+        Export(model.SelectedSaveFileType.Value switch
+        {
+            "png" or "jpeg" => ExportFormat.Images,
+            "tiff" => ExportFormat.CombinedTiff,
+            _ => ExportFormat.CombinedPdf
+        }, model.SelectedSaveFileType.Value == "jpeg" ? ImageOutput.Jpeg : ImageOutput.Png));
 
     private async Task HandleUi(Func<Task> action)
     {
@@ -402,17 +429,17 @@ public sealed partial class MainWindow : Window
         catch (Exception error)
         {
             model.Error = error.Message;
-            model.Status = "Couldn't open the dialog. Your session is unchanged.";
+            model.Status = "Couldn't open the dialog. Your scans are unchanged.";
             Console.Error.WriteLine(error);
         }
     }
 
-    private async Task Export(ExportFormat format)
+    private async Task Export(ExportFormat format, ImageOutput imageFormat = ImageOutput.Png)
     {
         if (!model.CanExport) return;
         var selected = model.ExportSelection;
         var dialog = new ExportWindow(format, model.Session!.Pages.Any(page => page.PreservePdf && (selected is null || selected.Contains(page.Identity))),
-            model.SearchablePdf, model.OcrLanguages, model.OcrLanguage)
+            model.SearchablePdf, model.OcrLanguages, model.OcrLanguage, imageFormat)
         {
             Width = Math.Min(560, ClientSize.Width - 40),
             Height = Math.Min(670, ClientSize.Height - 40)
@@ -458,7 +485,8 @@ public sealed partial class MainWindow : Window
                     model.Progress = progress.Fraction;
                     model.Status = progress.Message;
                 }), selection.Options, selected), token);
-            model.Status = $"Export saved: {destination}";
+            if (selected is null || model.Session!.Pages.All(page => selected.Contains(page.Identity))) model.MarkSaved();
+            model.Status = $"Saved: {destination}";
         });
     }
 

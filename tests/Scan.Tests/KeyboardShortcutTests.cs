@@ -30,7 +30,7 @@ public sealed class KeyboardShortcutTests : TestFiles
 
             Assert.That(window.FindControl<Button>("SettingsButton")!.Flyout!.IsOpen, Is.False);
         }
-        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); window.Close(); }
+        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -49,7 +49,7 @@ public sealed class KeyboardShortcutTests : TestFiles
 
             Assert.That(desktop.Calls.Select(call => call.Command), Is.EqualTo(new[] { "lpstat" }));
         }
-        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); window.Close(); }
+        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -68,7 +68,7 @@ public sealed class KeyboardShortcutTests : TestFiles
 
             Assert.That(model.Session!.ManualDuplex!.Fronts, Is.Empty);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -103,7 +103,7 @@ public sealed class KeyboardShortcutTests : TestFiles
 
             Assert.That(window.OwnedWindows, Is.Empty);
         }
-        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); window.Close(); }
+        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -124,14 +124,16 @@ public sealed class KeyboardShortcutTests : TestFiles
 
             Assert.That(model.Selection.Selected.Count, Is.EqualTo(1));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
     public void SpaceOnAFocusedButtonActivatesThatButtonInsteadOfTheScanShortcut()
     {
-        var window = new MainWindow(new MainViewModel(), discover: false);
+        var model = new MainViewModel();
+        var window = new MainWindow(model, discover: false);
         window.Show();
+        var originalPath = model.Session!.DirectoryPath;
         try
         {
             window.FindControl<Button>("NewSessionButton")!.Focus();
@@ -139,9 +141,11 @@ public sealed class KeyboardShortcutTests : TestFiles
             window.KeyPressQwerty(PhysicalKey.Space, RawInputModifiers.None);
             window.KeyReleaseQwerty(PhysicalKey.Space, RawInputModifiers.None);
 
-            Assert.That(window.OwnedWindows.Select(dialog => dialog.Title), Is.EqualTo(new[] { "New scan session" }));
+            Assert.That(window.OwnedWindows, Is.Empty);
+            Assert.That(model.Session!.DirectoryPath, Is.Not.EqualTo(originalPath));
+            Assert.That(Directory.Exists(originalPath), Is.False);
         }
-        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); window.Close(); }
+        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); window.CloseForTest(); }
     }
 
     [AvaloniaTest, Category("Integration")]
@@ -166,7 +170,7 @@ public sealed class KeyboardShortcutTests : TestFiles
 
             Assert.That(bottom, Is.LessThanOrEqualTo(dialog.ClientSize.Height));
         }
-        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); window.Close(); }
+        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -190,7 +194,7 @@ public sealed class KeyboardShortcutTests : TestFiles
 
             Assert.That(window.FindControl<ComboBox>(name)!.IsDropDownOpen, Is.True);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -211,7 +215,7 @@ public sealed class KeyboardShortcutTests : TestFiles
 
             Assert.That(window.OwnedWindows.OfType<ExportWindow>().Select(dialog => dialog.Title), Is.EqualTo(new[] { title }));
         }
-        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); window.Close(); }
+        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -231,7 +235,7 @@ public sealed class KeyboardShortcutTests : TestFiles
 
             Assert.That(window.OwnedWindows.Select(dialog => dialog.Title), Is.EqualTo(new[] { title }));
         }
-        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); window.Close(); }
+        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -249,7 +253,7 @@ public sealed class KeyboardShortcutTests : TestFiles
 
             Assert.That(window.FindControl<Button>("SettingsButton")!.Flyout!.IsOpen, Is.False);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -275,7 +279,7 @@ public sealed class KeyboardShortcutTests : TestFiles
 
             Assert.That(session.Pages, Is.EqualTo(before));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -293,7 +297,7 @@ public sealed class KeyboardShortcutTests : TestFiles
 
             Assert.That(model.SearchablePdf, Is.True);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -308,7 +312,7 @@ public sealed class KeyboardShortcutTests : TestFiles
 
             Assert.That(model.SearchablePdf, Is.False);
         }
-        finally { model.Busy = false; window.Close(); }
+        finally { model.Busy = false; window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -323,7 +327,7 @@ public sealed class KeyboardShortcutTests : TestFiles
 
             Assert.That(model.ExportSelected, Is.True);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -339,7 +343,7 @@ public sealed class KeyboardShortcutTests : TestFiles
 
             Assert.That(reference.GetVisualDescendants().OfType<TextBlock>().Select(text => text.Text), Does.Contain("Ctrl+Shift+S"));
         }
-        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); model.Busy = false; window.Close(); }
+        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); model.Busy = false; window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -355,6 +359,6 @@ public sealed class KeyboardShortcutTests : TestFiles
 
             Assert.That(ToolTip.GetTip(window.FindControl<Button>("RefreshOcrButton")!), Is.EqualTo("Refresh installed OCR languages · Shift+F5\nFixture OCR availability"));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 }

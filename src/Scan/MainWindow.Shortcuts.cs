@@ -65,11 +65,11 @@ public sealed partial class MainWindow
             }, check);
         }
 
-        Button("Ctrl+N", "NewSessionButton", "New session", "Session", true);
-        Button("Ctrl+O", "OpenSessionButton", "Open session", "Session", true);
-        Button("Ctrl+I", "ImportFilesButton", "Import PDFs / images", "Session", true);
-        Add("Ctrl+Q", "Quit (saved pages stay on disk)", "Session", Close);
-        Add("Q", "Quit (outside text fields)", "Session", Close);
+        Button("Ctrl+N", "NewSessionButton", "New scans", "Scans", true);
+        Button("Ctrl+O", "ImportFilesButton", "Import PDFs / images", "Scans");
+        Button("Ctrl+I", "ImportFilesButton", "Import PDFs / images", "Scans", true);
+        Add("Ctrl+Q", "Quit (temporary scans are deleted)", "Scans", Close);
+        Add("Q", "Quit (outside text fields)", "Scans", Close);
 
         Button("Space", "ScanButton", "Scan pages", "Scanning", true);
         Button("F6", "ScanButton", "Scan pages from any control", "Scanning");
@@ -106,7 +106,7 @@ public sealed partial class MainWindow
         Button("Ctrl+0", "FitPageButton", "Fit page", "Preview", true);
         Button("Ctrl+NumPad0", "FitPageButton", "Fit page (number pad)", "Preview");
 
-        Button("Ctrl+S", "CombinedExportButton", "Export one document", "Output and processing", true);
+        Button("Ctrl+S", "CombinedExportButton", "Save scans", "Output and processing", true);
         Button("Ctrl+Shift+S", "SeparatePdfsButton", "Export separate PDFs", "Output and processing", true);
         Button("Ctrl+Shift+I", "ImagesExportButton", "Export separate images", "Output and processing", true);
         Button("Ctrl+P", "PrintButton", "Print document", "Output and processing", true);

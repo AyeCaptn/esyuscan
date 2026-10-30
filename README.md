@@ -14,7 +14,9 @@ is included but has not been hardware-tested by me.
 ![esyuscan with fictional scanned documents](docs/esyuscan.png)
 
 Scan through AirScan/eSCL or SANE, review and edit pages, then export individual
-images, separate PDFs or one document. Optional OCR uses an installed Tesseract.
+images, separate PDFs or one document. Scans live in temporary storage until you
+save them as PDF, PNG, JPEG or TIFF. New and closing remove temporary scans;
+Import adds one or more existing documents. Optional OCR uses an installed Tesseract.
 The scanning and document backend is the unmodified NAPS2 SDK.
 
 The screenshot uses generated demo pages, not private documents or scanner IDs.

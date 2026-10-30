@@ -48,7 +48,7 @@ public sealed class ExportWindow : Window
     private readonly StackPanel securityPanel = new() { Spacing = 10 };
 
     public ExportWindow(ExportFormat workflow, bool hasPreservedPdf, bool searchablePdf = false,
-        IEnumerable<string>? languages = null, string? selectedLanguage = null)
+        IEnumerable<string>? languages = null, string? selectedLanguage = null, ImageOutput imageFormat = ImageOutput.Png)
     {
         this.workflow = workflow;
         this.hasPreservedPdf = hasPreservedPdf;
@@ -64,6 +64,7 @@ public sealed class ExportWindow : Window
             ExportFormat.SeparatePdfs => Picker("ExportFileFormat", "PDF · one file per page"),
             _ => Picker("ExportFileFormat", "PDF · combined", "TIFF · multipage")
         };
+        if (workflow == ExportFormat.Images) format.SelectedIndex = (int)imageFormat;
         if (workflow == ExportFormat.CombinedTiff) format.SelectedIndex = 1;
         searchable = Check("ExportSearchable", "Searchable PDF (OCR)", searchablePdf);
         var installedLanguages = languages?.OrderBy(OcrLanguageCatalog.Name, StringComparer.CurrentCultureIgnoreCase).ToArray() ?? [];

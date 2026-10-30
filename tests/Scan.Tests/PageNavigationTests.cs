@@ -283,7 +283,7 @@ public sealed class PageNavigationTests : TestFiles
             window.KeyPressQwerty(PhysicalKey.Z, RawInputModifiers.Control);
             Assert.That(model.Selection.Selected.Count, Is.EqualTo(5));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -317,7 +317,7 @@ public sealed class PageNavigationTests : TestFiles
             Assert.That(model.ExportSelection, Is.EquivalentTo(model.Selection.Selected));
             Assert.That(model.ExportSelected, Is.True);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -346,7 +346,7 @@ public sealed class PageNavigationTests : TestFiles
             Assert.That(session.Pages, Is.EqualTo(before));
             Assert.That(model.Selection.Selected, Is.EquivalentTo(before.Take(2).Select(page => page.FileName)));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -373,7 +373,7 @@ public sealed class PageNavigationTests : TestFiles
             window.MouseUp(new Point(end.X, 10), MouseButton.Left);
             Assert.That(session.Pages, Is.EqualTo(before));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -401,7 +401,7 @@ public sealed class PageNavigationTests : TestFiles
             Assert.That(session.Pages, Is.EqualTo(before));
             Assert.Throws<InvalidOperationException>(() => session.MovePages([before[0].FileName], 4));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -456,7 +456,7 @@ public sealed class PageNavigationTests : TestFiles
                 bitmap.Save(Path.Combine(folder, $"navigation-{width}.png"), new PngBitmapEncoderOptions());
             }
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -485,7 +485,7 @@ public sealed class PageNavigationTests : TestFiles
 
             Assert.That(model.SelectedPage, Is.EqualTo(model.Pages[expected]));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -506,7 +506,7 @@ public sealed class PageNavigationTests : TestFiles
 
             Assert.That(model.Selection.Selected, Is.EquivalentTo(session.Pages.Skip(1).Take(2).Select(page => page.Identity)));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -527,7 +527,7 @@ public sealed class PageNavigationTests : TestFiles
             Assert.That((model.Selection.Focus, model.Selection.Selected.Single()),
                 Is.EqualTo((session.Pages[1].Identity, session.Pages[0].Identity)));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -556,7 +556,7 @@ public sealed class PageNavigationTests : TestFiles
 
             Assert.That((model.Zoom.Scale, session.Pages.ToArray()), Is.EqualTo((1.0, before)));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -579,7 +579,7 @@ public sealed class PageNavigationTests : TestFiles
 
             Assert.That(model.Zoom.Scale, Is.EqualTo(1.5));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [TestCase(0.001, PreviewZoom.Minimum)]
@@ -626,7 +626,7 @@ public sealed class PageNavigationTests : TestFiles
 
             Assert.That(scroll.Offset.Y, Is.GreaterThan(0));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -645,7 +645,7 @@ public sealed class PageNavigationTests : TestFiles
             var tray = window.FindControl<ListBox>("PageTray")!;
             Assert.That(tray.GetVisualDescendants().OfType<Avalonia.Controls.Primitives.ScrollBar>().Where(bar => bar.IsVisible), Is.Empty);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -669,7 +669,7 @@ public sealed class PageNavigationTests : TestFiles
             var bottom = last.TranslatePoint(new Point(0, last.Bounds.Height), tray)!.Value.Y;
             Assert.That(bottom, Is.InRange(last.Bounds.Height, tray.Bounds.Height));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -687,7 +687,7 @@ public sealed class PageNavigationTests : TestFiles
 
             Assert.That(window.FindControl<TextBlock>("ThumbnailPageCount")!.Text, Is.EqualTo("2 pages"));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     private static Point PagePoint(MainWindow window, int index)

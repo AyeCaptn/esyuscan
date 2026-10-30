@@ -68,7 +68,7 @@ public sealed class OcrLanguageTests
 
             Assert.That(picker.GetVisualDescendants().OfType<TextBlock>().Select(text => text.Text), Does.Contain("Serbian (Latin) (srp_latn)"));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -184,7 +184,7 @@ public sealed class OcrLanguageTests
 
             Assert.That(window.OwnedWindows, Is.Empty);
         }
-        finally { model.Busy = false; window.Close(); }
+        finally { model.Busy = false; window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -202,7 +202,7 @@ public sealed class OcrLanguageTests
 
             Assert.That(model.OcrLanguage, Is.EqualTo("fra"));
         }
-        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); window.Close(); }
+        finally { foreach (var dialog in window.OwnedWindows.ToArray()) dialog.Close(); window.CloseForTest(); }
     }
 
     [AvaloniaTest, Category("Integration")]

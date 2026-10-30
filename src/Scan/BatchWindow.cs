@@ -75,7 +75,7 @@ public sealed class BatchWindow : Window
         setup.Children.Add(grouping);
         setup.Children.Add(Label("Exact separator text · QR or Code 128 (case-sensitive)"));
         setup.Children.Add(separatorText);
-        setup.Children.Add(Label("Separator sheets are kept by default. Review can exclude them from document exports; originals always stay saved."));
+        setup.Children.Add(Label("Separator sheets are kept by default. Review can exclude them from document exports; originals stay in temporary storage until the app closes."));
         var body = new StackPanel { Margin = new Thickness(24), Spacing = 12 };
         body.Children.Add(Label("Batch scans use your currently selected scanner and settings. Check those settings before continuing. Guided manual duplex is a separate workflow."));
         body.Children.Add(Label(scannerDescription));
@@ -97,7 +97,7 @@ public sealed class BatchWindow : Window
         body.Children.Add(include);
         body.Children.Add(reviewed);
         body.Children.Add(export);
-        body.Children.Add(Label("Documents export only pages captured by this batch. The main window’s three export buttons include ALL session pages, including separator sheets, after review is confirmed. Exit batch before ordinary page editing."));
+        body.Children.Add(Label("Documents export only pages captured by this batch. The main window’s Save and separate output controls include ALL pages, including separator sheets, after review is confirmed. Exit batch before ordinary page editing."));
         body.Children.Add(exit);
         body.Children.Add(close);
         var shell = new Grid { RowDefinitions = new RowDefinitions("*,Auto") };
@@ -192,7 +192,7 @@ public sealed class BatchWindow : Window
         if (operation is not null) return;
         using var cancellation = new CancellationTokenSource();
         operation = cancellation;
-        status.Text = "Batch running. Every completed page is saved immediately.";
+        status.Text = "Batch running. Pages are kept in temporary storage; save before closing.";
         Refresh();
         try { await action(cancellation.Token); }
         catch (OperationCanceledException) { status.Text = "Stopped. Saved pages remain; resolve any interrupted scan before continuing."; }

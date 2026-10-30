@@ -137,7 +137,6 @@ public sealed class StartupDiscoveryTests : TestFiles
 
     [AvaloniaTest]
     [TestCase("NewSessionButton")]
-    [TestCase("OpenSessionButton")]
     [TestCase("ImportFilesButton")]
     [TestCase("CombinedExportButton")]
     [TestCase("SettingsButton")]
@@ -157,7 +156,7 @@ public sealed class StartupDiscoveryTests : TestFiles
 
             Assert.That(window.FindControl<Button>(name)!.IsEffectivelyEnabled, Is.True);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -171,7 +170,7 @@ public sealed class StartupDiscoveryTests : TestFiles
         {
             Assert.That(await finder.Started.Task.WaitAsync(TimeSpan.FromSeconds(10)), Is.False);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -188,7 +187,7 @@ public sealed class StartupDiscoveryTests : TestFiles
 
             Assert.That(model.CanScan, Is.True);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -207,7 +206,7 @@ public sealed class StartupDiscoveryTests : TestFiles
 
             Assert.That(finder.Calls, Is.EqualTo(1));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -223,7 +222,7 @@ public sealed class StartupDiscoveryTests : TestFiles
 
             Assert.That(model.CanEdit, Is.True);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -243,7 +242,7 @@ public sealed class StartupDiscoveryTests : TestFiles
 
             Assert.That(model.Status, Is.EqualTo("Foreground document work"));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -260,7 +259,7 @@ public sealed class StartupDiscoveryTests : TestFiles
 
             Assert.That(desktop.Calls, Is.Empty);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -304,7 +303,7 @@ public sealed class StartupDiscoveryTests : TestFiles
 
             Assert.That(model.CurrentScanSettings().Device.ID, Is.EqualTo(second.ID));
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -334,7 +333,7 @@ public sealed class StartupDiscoveryTests : TestFiles
 
             Assert.That(calls, Is.EqualTo(2));
         }
-        finally { model.Busy = false; window.Close(); }
+        finally { model.Busy = false; window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -353,7 +352,7 @@ public sealed class StartupDiscoveryTests : TestFiles
         {
             Assert.That(await started.Task.WaitAsync(TimeSpan.FromSeconds(10)), Is.False);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -372,7 +371,7 @@ public sealed class StartupDiscoveryTests : TestFiles
 
             Assert.That(model.Error, Is.Empty);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 
     [AvaloniaTest, Category("Integration")]
@@ -403,6 +402,6 @@ public sealed class StartupDiscoveryTests : TestFiles
 
             Assert.That(window.FindControl<Button>("CombinedExportButton")!.IsEffectivelyEnabled, Is.True);
         }
-        finally { window.Close(); }
+        finally { window.CloseForTest(); }
     }
 }

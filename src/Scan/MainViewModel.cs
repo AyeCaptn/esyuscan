@@ -34,7 +34,7 @@ public sealed class PagePreview : IDisposable
 
 public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
 {
-    private string status = "Create a session to start scanning.";
+    private string status = "Scan or import pages, then Save to keep them.";
     private string error = "";
     private bool busy;
     private double progress;
@@ -108,8 +108,24 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<ScanChoice<BitDepth>> Colors { get; } = [];
     public ObservableCollection<int> Resolutions { get; } = [];
     public bool AutoDeskew { get; set; }
-    public string SessionName => Session?.Name ?? "A fresh start.";
-    public string SessionPath => Session?.DirectoryPath ?? "Every scan session gets its own folder.";
+    private object? savedHistory;
+    public bool HasUnsavedScans => HasPages && !ReferenceEquals(savedHistory, Session?.HistoryState);
+    public void MarkSaved()
+    {
+        savedHistory = Session?.HistoryState;
+        Notify(nameof(HasUnsavedScans));
+        Notify(nameof(SessionName));
+    }
+    public ScanChoice<string>[] SaveFileTypes { get; } =
+    [new("PDF", "pdf"), new("PNG", "png"), new("JPEG", "jpeg"), new("TIFF", "tiff")];
+    private ScanChoice<string>? selectedSaveFileType;
+    public ScanChoice<string> SelectedSaveFileType
+    {
+        get => selectedSaveFileType ?? SaveFileTypes[0];
+        set => Set(ref selectedSaveFileType, value);
+    }
+    public string SessionName => HasUnsavedScans ? "Unsaved scans" : HasPages ? "Scans saved" : "New scans";
+    public string SessionPath => "Temporary scans are deleted on New or when you close. Save to keep them.";
     public string PageCount => $"{Pages.Count} {(Pages.Count == 1 ? "page" : "pages")}";
     public string PreviewCaption => SelectedPage is null ? "Your documents, together." : $"{SelectedPage.Caption} · {SelectedPage.Number} of {Pages.Count}" + (SelectedPage?.IsPdf == true ? (SelectedPage.Page.PreservePdf ? " · PDF source preserved" : " · PDF raster edit; source retained") : "");
     public bool HasPages => Pages.Count > 0;
@@ -248,12 +264,13 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         displayedHistory = null;
         Selection.Reconcile([]);
         Session = next;
+        savedHistory = null;
         ScanSettingsExpanded = !HasDuplex;
         RefreshDuplex();
         Notify(nameof(SessionName));
         Notify(nameof(SessionPath));
         NotifyState();
-        Status = HasBatch ? "Recovered batch. Open Batch setup / review to explicitly resume or review; physical scans never restart automatically." : HasDuplex ? "Recovered an unfinished double-sided scan. Review or resume below; all completed pages are saved." : "Session saved automatically. Originals are never overwritten.";
+        Status = HasBatch ? "Recovered batch. Open Batch setup / review to explicitly resume or review; physical scans never restart automatically." : HasDuplex ? "Recovered an unfinished double-sided scan. Review or resume below; all completed pages are saved." : "Scan or import pages, then Save to keep them. Temporary scans are deleted when you close.";
     }
 
     public void SyncPages(int? selectIndex = null)
@@ -284,6 +301,8 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         displayedHistory = nextHistory;
         RefreshSelection();
         syncingPages = false;
+        Notify(nameof(HasUnsavedScans));
+        Notify(nameof(SessionName));
         Notify(nameof(PageCount));
         Notify(nameof(HasPages));
         Notify(nameof(IsEmpty));

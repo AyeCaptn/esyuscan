@@ -71,7 +71,7 @@ public sealed class AdjustmentUiTests : TestFiles
             session.Undo();
             Assert.That(session.Pages[0], Is.EqualTo(expected), "Reset must also be one undoable edit.");
         }
-        finally { foreach (var editor in window.OwnedWindows.ToArray()) editor.Close(); window.Close(); }
+        finally { foreach (var editor in window.OwnedWindows.ToArray()) editor.Close(); window.CloseForTest(); }
     }
 
     [AvaloniaTest]

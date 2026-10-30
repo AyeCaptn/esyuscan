@@ -51,6 +51,9 @@
       <Setter Property="Padding" Value="8,4" />
       <Setter Property="FontSize" Value="10" />
     </Style>
+    <Style Selector="Window.compact Border.export-footer Button">
+      <Setter Property="Padding" Value="6,4" />
+    </Style>
     <Style Selector="Window.compact Grid.document-area">
       <Setter Property="Margin" Value="8" />
     </Style>
@@ -92,7 +95,6 @@
         </StackPanel>
         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
           <Button x:Name="NewSessionButton" Content="New" Click="NewSession" IsEnabled="{Binding CanEdit}" />
-          <Button x:Name="OpenSessionButton" Content="Open" Click="OpenSession" IsEnabled="{Binding CanEdit}" Classes="quiet" />
           <Button x:Name="ImportFilesButton" Content="Import…" Click="ImportFiles" IsEnabled="{Binding CanEdit}" Classes="quiet" />
           <Button x:Name="SettingsButton" Content="Settings" Classes="quiet">
             <Button.Flyout>
@@ -299,7 +301,7 @@
                   <Border Height="2" Background="{DynamicResource BorderBrush}" Width="28" HorizontalAlignment="Left" />
                 </StackPanel>
               </Border>
-              <Button Content="Create your first session" Classes="primary" Click="NewSession" HorizontalAlignment="Center" IsVisible="{Binding !HasSession}" />
+              <TextBlock Text="Scan or import pages, then Save to keep them." HorizontalAlignment="Center" />
             </StackPanel>
             <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="10,2,6,4">
               <TextBlock Text="{Binding PreviewCaption}" Classes="muted" FontSize="9" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
@@ -360,7 +362,8 @@
           <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
             <Button x:Name="ImagesExportButton" Content="Separate images" Click="ExportImages" IsEnabled="{Binding CanExport}" ToolTip.Tip="Choose PNG, JPEG or TIFF, with one numbered file per page" />
             <Button x:Name="SeparatePdfsButton" Content="Separate PDFs" Click="ExportPdfs" IsEnabled="{Binding CanExport}" ToolTip.Tip="One PDF per page, with compression, metadata and security options" />
-            <Button x:Name="CombinedExportButton" Content="One document  →" Classes="primary" Click="ExportDocument" IsEnabled="{Binding CanExport}" ToolTip.Tip="Choose a combined PDF or multipage TIFF" />
+            <ComboBox x:Name="SaveFileTypePicker" ItemsSource="{Binding SaveFileTypes}" SelectedItem="{Binding SelectedSaveFileType}" IsEnabled="{Binding CanConfigure}" MinWidth="85" ToolTip.Tip="File type for Save: PDF, PNG, JPEG or multipage TIFF" />
+            <Button x:Name="CombinedExportButton" Content="Save…" Classes="primary" Click="ExportDocument" IsEnabled="{Binding CanExport}" ToolTip.Tip="Save scans in the selected file type · Ctrl+S" />
           </StackPanel>
         </Grid>
         <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,Auto" MinHeight="16">

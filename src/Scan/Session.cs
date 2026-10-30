@@ -39,6 +39,24 @@ public sealed partial class Session : IDisposable
         Batch = manifest.Batch;
     }
 
+    public bool IsTemporary { get; private set; }
+
+    public static Session CreateTemporary()
+    {
+        var directory = Directory.CreateTempSubdirectory("esyuscan-").FullName;
+        try
+        {
+            var scans = Create(directory, "Unsaved scans");
+            scans.IsTemporary = true;
+            return scans;
+        }
+        catch
+        {
+            Directory.Delete(directory, recursive: true);
+            throw;
+        }
+    }
+
     public string DirectoryPath { get; }
     public string Name { get; }
     public IReadOnlyList<SessionPage> Pages => pages.AsReadOnly();
@@ -290,7 +308,11 @@ public sealed partial class Session : IDisposable
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }
 
-    public void Dispose() => lease.Dispose();
+    public void Dispose()
+    {
+        lease.Dispose();
+        if (IsTemporary && Directory.Exists(DirectoryPath)) Directory.Delete(DirectoryPath, recursive: true);
+    }
 
     private static bool IsFileName(string? name) => !string.IsNullOrWhiteSpace(name)
         && name is not ("." or "..") && name == Path.GetFileName(name);

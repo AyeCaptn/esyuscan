@@ -6,30 +6,32 @@ No webview, NAPS2 fork, cloud account, or background service.
 
 The Arch package, executable and launcher are named `esyuscan`.
 
-## Scan a session
+## Scan and save
 
-1. Choose **New session**, give it a name, and choose its parent folder.
-2. Select the scanner and settings. Use the flatbed repeatedly, or scan a stack
-   through the feeder. Only capabilities reported by the scanner are offered.
-3. Review the pages. Adjust brightness/contrast, sharpen, correct documents/noise, flip,
-   deskew, crop, rotate, reorder, remove, undo, or import additional PDFs and images.
-4. Export all pages, or enable **Selected pages only** for the highlighted selection.
-   Choose **Separate images** (numbered PNGs, JPEGs or TIFFs), **Separate PDFs**,
-   or **One document** (combined PDF or multipage TIFF). Each action opens format/options
-   controls before the destination picker. PDF options include compression/quality,
-    PDF/A, metadata, passwords and permissions; see [export options](export-options.md).
-   The same session can be exported more than once without rescanning.
-   Optionally enable **Searchable PDF (OCR)** and choose an installed OCR language
-   for either PDF mode. Separate images and multipage TIFF contain pixels only. Use **Refresh OCR**
-    after provisioning components; see [searchable PDF setup](searchable-pdf.md).
+1. Start scanning immediately: each window creates a private temporary folder.
+   Select a scanner and settings, or choose **Import…** to add one or more PDFs or images.
+2. Review and edit the pages: adjust, deskew, crop, rotate, reorder, remove, or undo.
+3. Choose a file type beside **Save…**: PDF, PNG, JPEG, or multipage TIFF.
+   Save opens format/options controls, then a destination picker. PDF and multipage
+   TIFF produce one file; PNG/JPEG produce numbered files in a new folder.
+   **Separate images** and **Separate PDFs** offer additional per-page output options.
+   Enable **Selected pages only** to save just the highlighted pages.
+   See [export options](export-options.md) for compression, PDF/A, metadata and security.
+4. **New** starts with a fresh temporary folder. If the current pages include
+   unsaved changes, a warning lets you cancel and save first, or discard them.
 
-Each session has its own folder, `session.json`, and an `originals/` directory.
-Completed pages and edits are saved automatically. **Open session** resumes them
-after an app restart. Removing a page does not delete its original; undo history
-lasts until the session is closed. Sessions use `.esyuscan.lock` to prevent
-concurrent edits. Do not open the same session in older prototype builds at the
-same time; those builds use a different lock filename.
-Exports never overwrite existing files and are published only when complete.
+Closing with unsaved scans asks for confirmation. Cancel keeps the app and scans
+open so you can Save; **Discard and close** deletes temporary scans, sources,
+edits, and undo history. Saved or empty scans close without a prompt.
+Save converts the current pages to the chosen destination; those output files
+remain after closing. You can keep editing or save again without rescanning.
+Saving a subset does not mark the other pages as saved. There is no Open-session
+workflow; use **Import…** to bring saved documents back into the app.
+Cancelling or failing a save leaves the temporary scans available to retry.
+Output never overwrites existing files and is published only when complete.
+
+Optionally enable **Searchable PDF (OCR)** and choose an installed language.
+Images and multipage TIFF contain pixels only. See [searchable PDF setup](searchable-pdf.md).
 
 ## Page selection and preview
 
@@ -62,7 +64,7 @@ scanner discovery details, system printer settings, and theme status.
 
 esyuscan remembers the last selected scanner, paper source, color, DPI, paper
 size, alignment, units and selected scan area. Valid changes are saved
-automatically, independently of scan sessions.
+automatically, independently of temporary scans.
 The scanner is matched by the NAPS2 driver and device ID, so a renamed scanner
 still matches and scanners with the same display name remain distinct.
 
@@ -86,7 +88,7 @@ limitations, and integration notes.
 
 Known scanners and the last selected scanner appear immediately at startup.
 Discovery, the selected scanner's capability check, and OCR detection run in the
-background without locking sessions, import, editing, or export. Scan becomes
+background without blocking scans, import, editing, or export. Scan becomes
 available after the selected device's live capabilities validate its settings;
 it does not wait for full discovery. Offline remembered devices remain listed,
 with an unverified/checking status. A late refresh does not replace your current
@@ -157,8 +159,8 @@ rotations. All three export modes remain available after finishing the guide.
 
 Unequal counts block Apply. Scan only remaining sides if the continuation is
 known, or choose **Keep scan order / exit** and correct missing sheets manually.
-Cancellation, scanner errors, and reopening retain completed sides and recover
-the reload/review step. See [the workflow and recovery guide](manual-duplex.md),
+Cancellation and scanner errors retain completed sides in temporary storage
+until you close the app. See [the workflow and recovery guide](manual-duplex.md),
 including the remaining HP reload/orientation hardware validation.
 
 ## Batch scanning and document separation
@@ -168,10 +170,10 @@ seconds between scans and optional prompts. Use one document per scan, or QR /
 Code 128 separator sheets with exact matching text. Review every captured page,
 correct document boundaries and separator flags, choose whether to include those
 sheets (included by default), then export numbered document PDFs in a new folder.
-No sheet is deleted from the session. Partial scans and interrupted batches pause
-for an explicit recovery choice; opening a session never restarts physical jobs.
-The three existing export buttons remain available after review and export all
-session pages, including separators. See [batch setup, recovery, grouping and
+No sheet is deleted during batch review. Partial scans pause for an explicit
+recovery choice while the app remains open. Closing deletes temporary pages.
+The main Save and separate output controls remain available after review and include all
+current pages, including separators. See [batch setup, recovery, grouping and
 export details](batch-scanning.md).
 
 ## Deskew and crop
@@ -219,11 +221,8 @@ Changing deskew retains the crop rectangle in canvas coordinates, so inspect
 its edges afterward. Thumbnails, main preview, crop result, image/TIFF exports, both
 PDF exports, and CLI exports all use `PageRenderer` before display scaling.
 
-Sessions with crop, deskew or PDF sources use manifest version 2. New image
-adjustments use version 3; versions 1 and 2 still open with no migration step.
-Sessions without these fields continue to save as version 1. Older esyuscan builds
-reject unsupported versions rather than silently exporting pages without edits.
-Undo/redo history still lasts only until the session is closed.
+Edits and source metadata are held in temporary storage. Undo/redo history lasts
+until you choose New or close the app. Save renders edits into the output files.
 
 SDK integration: the installed package identifies upstream commit
 [`f914a4ec`](https://github.com/cyanfish/naps2/tree/f914a4ec2af090aca4fa55eb3242ec91641482c3).
@@ -282,23 +281,23 @@ lossless AirScan responses.
 ## Import and extract PDF pages
 
 Choose **Import PDFs / images** (Ctrl+I) to append PDFs, PNGs, JPEGs, TIFFs, or
-BMPs to the current session. Files follow the order supplied by the picker;
+BMPs to the current scans. Files follow the order supplied by the picker;
 pages within a PDF or TIFF keep their source order. You can mix these with scans,
 move pages, remove pages, and rotate them in 90-degree steps. Import runs in the
 background; Escape or **Cancel** stops it while keeping every completed page.
-If a later file fails, earlier completed pages remain saved. Errors identify the
+If a later file fails, earlier completed pages remain in temporary storage. Errors identify the
 file. Password-protected PDFs require an unlocked copy; esyuscan does not prompt
 for or store passwords. Damaged or unsupported PDFs produce an error.
 
-esyuscan copies each PDF into the session before importing pages. Reopening and
-exporting never depend on the external file, even after it is moved or deleted.
+esyuscan copies each PDF into temporary storage before importing pages. Saving
+does not depend on the external file, even after it is moved or deleted.
 The preview caption identifies PDF pages. PNG previews serve the page tray and
 large preview; they do not replace the PDF source for unedited PDF exports.
 
-- **One document** combines the current page order, including mixed scans and PDFs.
+- **Save…** combines the current page order, including mixed scans and PDFs.
 - **Separate PDFs** extracts each remaining page into a numbered one-page PDF.
 - **Separate images** renders each remaining page as PNG, JPEG or TIFF; images
-  cannot retain PDF text or vectors. **One document** also offers multipage TIFF. The PDF source stays in the session for later PDF exports.
+  cannot retain PDF text or vectors. **Save…** also offers multipage TIFF. The PDF source stays in temporary storage until New or close.
 
 For unedited text/vector pages, NAPS2 passes PDF content through to both PDF export modes.
 Quarter-turn rotations preserve text and vectors using PDF page rotation metadata.
@@ -310,13 +309,12 @@ recognized text stays within the visible page.
 NAPS2 can extract and re-encode an image-only PDF page as an image; byte-for-byte
 PDF output, document metadata, bookmarks, signatures, attachments, and interactive
 form behavior are not guaranteed. Original PDF bytes are always kept in the
-session's `originals/` folder, including after page removal or cancelled partial
+temporary `originals/` folder, including after page removal or cancelled partial
 imports. Undo/redo works for PDF pages as it does for scans.
 
-Existing image-only sessions remain compatible. Sessions containing PDF sources
-use format version 2 (version 3 with image adjustments); older esyuscan versions refuse unsupported sessions rather than
-silently exporting their previews. See [PDF storage and integration notes](pdf-import.md)
-for the schema, recovery, and raster-edit behavior.
+See [PDF storage and integration notes](pdf-import.md) for backend metadata and
+raster-edit behavior. The backend retains legacy manifest support for CLI tools;
+the GUI uses disposable storage.
 
 ## Current scope
 
@@ -369,7 +367,7 @@ created by these commands.
 ## Commands
 
 ```sh
-esyuscan open [session-folder]
+esyuscan open [PDF-or-image ...]
 esyuscan check --json
 esyuscan devices --json
 esyuscan ocr --json
@@ -385,7 +383,8 @@ esyuscan export SESSION --format pdfs --output SEARCHABLE_FOLDER --searchable --
 esyuscan skill install
 ```
 
-Close a session in the GUI before exporting it from another process. CLI errors
+The `export SESSION` commands support legacy persistent folders only.
+Current GUI scans are temporary and should be saved through the GUI. CLI errors
 exit with status 1. `--searchable` defaults to English (`eng`); `--ocr-language` requires
 `--searchable`. Ctrl+C cancels CLI export; progress goes to stderr, JSON results to stdout.
 `esyuscan ocr` only probes local OCR components and never discovers scanners.
@@ -410,9 +409,9 @@ tray it selects pages rather than scanning. **F6** scans from any control when r
 | Shortcut | Action |
 |---|---|
 | Space / F6 | Scan (Space only outside controls and the page tray) |
-| Ctrl+N / Ctrl+O | New / open session |
+| Ctrl+N / Ctrl+O | New scans / import files |
 | Ctrl+I | Import PDFs or images |
-| Ctrl+S / Ctrl+Shift+S / Ctrl+Shift+I | Export one document / separate PDFs / separate images |
+| Ctrl+S / Ctrl+Shift+S / Ctrl+Shift+I | Save chosen file type / separate PDFs / separate images |
 | Ctrl+P / Ctrl+M | Print / prepare email PDF |
 | Ctrl+Shift+P | Cancel last print job |
 | Ctrl+D / Ctrl+B | Guided double-sided scan / batch setup and review |
@@ -435,7 +434,7 @@ tray it selects pages rather than scanning. **F6** scans from any control when r
 | Esc | Close an open picker or Settings; otherwise cancel the active operation |
 | Ctrl+, | Open / close Settings |
 | F1 / ? | Show shortcuts |
-| Ctrl+Q / Q | Quit; completed pages are already saved |
+| Ctrl+Q / Q | Quit; temporary scans are deleted |
 
 Dialogs show **Enter** / **Esc** on their confirm/cancel buttons. In the batch
 window, **Ctrl+Enter** explicitly starts or resumes scans, **Ctrl+S** exports

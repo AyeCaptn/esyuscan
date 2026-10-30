@@ -5,14 +5,14 @@ namespace Scan;
 
 public static class Program
 {
-    public static string? SessionArgument { get; private set; }
+    public static string[] ImportArguments { get; private set; } = [];
 
     [STAThread]
     public static int Main(string[] args)
     {
         if (args.Length == 0 || args[0] == "open")
         {
-            SessionArgument = args.Length > 1 ? args[1] : null;
+            ImportArguments = args.Skip(1).ToArray();
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
             return 0;
         }
@@ -34,7 +34,7 @@ public static class Program
         if (args[0] is "--help" or "help")
         {
             Console.WriteLine("""
-                esyuscan open [session-folder]
+                esyuscan open [PDF-or-image ...]
                 esyuscan check [--json]
                 esyuscan devices [--json]
                 esyuscan export SESSION --format images|pdfs|pdf|tiff|documents --output PATH [--json]

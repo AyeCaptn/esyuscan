@@ -50,7 +50,7 @@ public sealed class Naps2ProfileUiTests : TestFiles
             Click(dialog, "CancelNaps2Import");
             Assert.That(model.Presets, Is.Empty);
         }
-        finally { model.Busy = false; owner.Close(); }
+        finally { model.Busy = false; owner.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -73,7 +73,7 @@ public sealed class Naps2ProfileUiTests : TestFiles
             Assert.That(model.SettingsExplanation, Does.Contain("unavailable"));
             Assert.That(model.Status, Does.Contain("explicitly"));
         }
-        finally { owner.Close(); }
+        finally { owner.CloseForTest(); }
     }
 
     [AvaloniaTest]
@@ -108,7 +108,7 @@ public sealed class Naps2ProfileUiTests : TestFiles
             Assert.That(store.Load().Preferences.LastScan, Is.EqualTo(ScanTestData.Settings()));
             Assert.That(File.ReadAllText(path), Is.EqualTo(Naps2TestData.FourProfiles));
         }
-        finally { dialog.Close(); owner.Close(); }
+        finally { dialog.Close(); owner.CloseForTest(); }
     }
 
     [AvaloniaTest]

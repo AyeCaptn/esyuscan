@@ -52,7 +52,7 @@ public sealed class AdjustmentsWindow : Window
             Children =
             {
                 controls, correction,
-                new WrapPanel { Children = { horizontal, vertical } },
+                new WrapPanel { ItemSpacing = 16, LineSpacing = 8, Children = { horizontal, vertical } },
                 new TextBlock
                 {
                     Text = "Document correction adjusts paper/text tones and reduces noise together; it can soften fine detail. It leaves pure black/white pages unchanged. Photo corrects tones only.",

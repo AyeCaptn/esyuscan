@@ -17,6 +17,27 @@ public sealed class AdjustmentUiTests : TestFiles
     private static void Click(Window window, string name) => window.FindControl<Button>(name)!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
 
     [AvaloniaTest]
+    [TestCase(420)]
+    [TestCase(900)]
+    public void FlipControlsHaveSpaceBetweenTheLabelAndNextCheckbox(int width)
+    {
+        using var session = CreateSession();
+        AddPages(session, 1);
+        var window = new AdjustmentsWindow(session, session.Pages[0]) { Width = width };
+        window.Show();
+        try
+        {
+            var horizontal = window.FindControl<CheckBox>("FlipHorizontal")!;
+            var vertical = window.FindControl<CheckBox>("FlipVertical")!;
+            var right = horizontal.TranslatePoint(new Point(horizontal.Bounds.Width, 0), window)!.Value.X;
+            var left = vertical.TranslatePoint(default, window)!.Value.X;
+
+            Assert.That(left - right, Is.GreaterThanOrEqualTo(16));
+        }
+        finally { window.Close(); }
+    }
+
+    [AvaloniaTest]
     public async Task ApplyCancelUndoRedoAndResetThroughWorkspace()
     {
         var model = new MainViewModel();

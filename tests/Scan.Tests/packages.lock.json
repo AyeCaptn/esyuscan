@@ -128,16 +128,6 @@
           "Avalonia": "12.1.4"
         }
       },
-      "Avalonia.Wayland": {
-        "type": "Transitive",
-        "resolved": "12.1.4",
-        "contentHash": "uj36BpurJJVzllicE7lFKX+pGiVhbG/y4TgZjnqhN7eE8UTswnhXiYmdaR+wHFYqRiGG5w/PKNTf+10NFHPadQ==",
-        "dependencies": {
-          "Avalonia": "12.1.4",
-          "Avalonia.FreeDesktop": "12.1.4",
-          "NWayland": "0.11.0"
-        }
-      },
       "CairoSharp": {
         "type": "Transitive",
         "resolved": "3.24.24.95",
@@ -513,6 +503,14 @@
         "type": "Transitive",
         "resolved": "0.16.11",
         "contentHash": "OZfAVu88hl87BffQ+rlWCj/vLvAhhCK4QnFaoveeF/MY8SjHNSYBQ3qyUEWlPKNgBQGh1syXhCDg10vUnCsqkg=="
+      },
+      "avalonia.wayland": {
+        "type": "Project",
+        "dependencies": {
+          "Avalonia": "[12.1.4, )",
+          "Avalonia.FreeDesktop": "[12.1.4, )",
+          "NWayland": "[0.11.0, )"
+        }
       },
       "esyuscan": {
         "type": "Project",

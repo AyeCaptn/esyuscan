@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <AvaloniaRevision>2d79ba55fae1b1e71c69f93a668080c9029e6a31</AvaloniaRevision>
+    <AvaloniaArchiveSha256>9e9ee6ee270bfdc02fbc34296da51ee6242325156d2b67cbed92d2ccbc2e2029</AvaloniaArchiveSha256>
+    <AvaloniaSourceRoot>$(MSBuildThisFileDirectory)../../artifacts/avalonia-wayland/Avalonia-$(AvaloniaRevision)</AvaloniaSourceRoot>
+  </PropertyGroup>
+</Project>

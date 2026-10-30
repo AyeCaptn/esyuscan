@@ -8,7 +8,7 @@ arch=('aarch64' 'x86_64')
 license=('MIT')
 depends=('dotnet-runtime>=10.0' 'dotnet-runtime<11.0' 'gtk3' 'libtiff' 'harfbuzz' 'fontconfig' 'xdg-desktop-portal'
          'wayland' 'libxkbcommon' 'libglvnd')
-makedepends=('dotnet-sdk>=10.0')
+makedepends=('dotnet-sdk>=10.0' 'curl' 'patch')
 optdepends=('sane: optional native SANE library and USB scanner backends (matching ARM64/x64)'
             'sane-airscan: optional SANE network scanner backend'
             'tesseract: optional searchable PDF OCR engine (native ARM64 or x64)'
@@ -23,6 +23,7 @@ build() {
     cd "$startdir/.."
     local runtime="linux-arm64"
     [[ "$CARCH" == 'x86_64' ]] && runtime='linux-x64'
+    bash scripts/prepare-wayland.sh
     dotnet restore src/Scan/Scan.csproj --locked-mode
     dotnet publish src/Scan/Scan.csproj --configuration Release --no-restore \
         --runtime "$runtime" --no-self-contained -p:UseAppHost=false --output "$srcdir/publish-$runtime"
@@ -38,6 +39,10 @@ package() {
     install -Dm644 "$startdir/esyuscan.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/esyuscan.svg"
     install -Dm644 "$startdir/../LICENSE" "$pkgdir/usr/share/licenses/esyuscan/LICENSE"
     install -Dm644 "$startdir/../THIRD-PARTY.md" "$pkgdir/usr/share/licenses/esyuscan/THIRD-PARTY.md"
+    local avalonia_revision
+    avalonia_revision=$(sed -n 's/.*<AvaloniaRevision>\(.*\)<\/AvaloniaRevision>.*/\1/p' "$startdir/../patches/Avalonia.Wayland/Source.props")
+    install -Dm644 "$startdir/../artifacts/avalonia-wayland/Avalonia-$avalonia_revision/licence.md" \
+        "$pkgdir/usr/share/licenses/esyuscan/Avalonia-LICENSE"
     for guide in "$startdir"/../docs/*.md; do
         install -Dm644 "$guide" "$pkgdir/usr/share/doc/esyuscan/$(basename "$guide")"
     done

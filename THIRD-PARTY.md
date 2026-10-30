@@ -18,7 +18,10 @@ esyuscan's original code is MIT-licensed. Dependency licenses remain separate.
 - **CUPS and xdg-utils (optional, system supplied):** external desktop commands,
   not bundled. CUPS is Apache-2.0 with its upstream exceptions; xdg-utils is MIT.
   <https://github.com/OpenPrinting/cups>, <https://gitlab.freedesktop.org/xdg/xdg-utils>.
-- **Avalonia:** MIT. <https://github.com/AvaloniaUI/Avalonia>.
+- **Avalonia 12.1.4:** MIT. <https://github.com/AvaloniaUI/Avalonia>.
+  The native Wayland backend is built from pinned source with a stale-configure
+  callback fix; see [the patch](patches/Avalonia.Wayland/README.md).
+  Its upstream license is included in the local package.
 - **NAPS2.Pdfium.Binaries 1.3.0:** Apache-2.0 packaging.
   <https://github.com/cyanfish/naps2-pdfium>. PDFium retains its upstream BSD-style
   and third-party licenses: <https://pdfium.googlesource.com/pdfium/+/refs/heads/main/LICENSE>.

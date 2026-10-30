@@ -10,7 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Avalonia.HarfBuzz" Version="12.1.4" />
     <PackageReference Include="Avalonia.Skia" Version="12.1.4" />
-    <PackageReference Include="Avalonia.Wayland" Version="12.1.4" />
+    <ProjectReference Include="../../patches/Avalonia.Wayland/Avalonia.Wayland.csproj" />
     <PackageReference Include="Avalonia.Themes.Simple" Version="12.1.4" />
     <PackageReference Include="NAPS2.Sdk" Version="1.6.0" />
     <PackageReference Include="NAPS2.Images.Gtk" Version="1.6.0" />

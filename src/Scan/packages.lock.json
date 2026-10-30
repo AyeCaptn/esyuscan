@@ -38,17 +38,6 @@
           "Avalonia": "12.1.4"
         }
       },
-      "Avalonia.Wayland": {
-        "type": "Direct",
-        "requested": "[12.1.4, )",
-        "resolved": "12.1.4",
-        "contentHash": "uj36BpurJJVzllicE7lFKX+pGiVhbG/y4TgZjnqhN7eE8UTswnhXiYmdaR+wHFYqRiGG5w/PKNTf+10NFHPadQ==",
-        "dependencies": {
-          "Avalonia": "12.1.4",
-          "Avalonia.FreeDesktop": "12.1.4",
-          "NWayland": "0.11.0"
-        }
-      },
       "NAPS2.Images.Gtk": {
         "type": "Direct",
         "requested": "[1.6.0, )",
@@ -390,6 +379,14 @@
         "type": "Transitive",
         "resolved": "0.16.11",
         "contentHash": "OZfAVu88hl87BffQ+rlWCj/vLvAhhCK4QnFaoveeF/MY8SjHNSYBQ3qyUEWlPKNgBQGh1syXhCDg10vUnCsqkg=="
+      },
+      "avalonia.wayland": {
+        "type": "Project",
+        "dependencies": {
+          "Avalonia": "[12.1.4, )",
+          "Avalonia.FreeDesktop": "[12.1.4, )",
+          "NWayland": "[0.11.0, )"
+        }
       }
     },
     "net10.0/linux-arm64": {

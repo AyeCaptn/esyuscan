@@ -24,10 +24,13 @@ The screenshot uses generated demo pages, not private documents or scanner IDs.
 Requires the .NET 10 SDK and native dependencies in [PKGBUILD](pkgbuild/PKGBUILD).
 
 ```sh
-dotnet restore Scan.slnx --locked-mode
+make restore
 make build
 make run
 ```
+
+The first restore downloads checksum-pinned Avalonia source and applies a native
+Wayland crash fix. See [the patch notes](patches/Avalonia.Wayland/README.md).
 
 `make package` builds an Arch package; `make install` installs it with authorization.
 The installed command is `esyuscan`; internal solution and project files use

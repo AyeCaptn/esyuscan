@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../Source.props" />
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <IsPackable>false</IsPackable>
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <NoWarn>$(NoWarn);RS2008</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" PrivateAssets="all" />
+    <Compile Include="$(AvaloniaSourceRoot)/src/tools/DevGenerators/**/*.cs" Exclude="$(AvaloniaSourceRoot)/src/tools/DevGenerators/obj/**;$(AvaloniaSourceRoot)/src/tools/DevGenerators/bin/**" />
+    <Compile Include="$(AvaloniaSourceRoot)/src/Shared/SourceGeneratorAttributes.cs" />
+    <Compile Include="$(AvaloniaSourceRoot)/src/Shared/IsExternalInit.cs" />
+  </ItemGroup>
+</Project>

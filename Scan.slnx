@@ -1,8 +1,12 @@
 <Solution>
+  <Folder Name="/patches/">
+    <Project Path="patches/Avalonia.Wayland/Avalonia.Wayland.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Scan/Scan.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Scan.Tests/Scan.Tests.csproj" />
+    <Project Path="tests/Wayland.Tests/Wayland.Tests.csproj" />
   </Folder>
 </Solution>

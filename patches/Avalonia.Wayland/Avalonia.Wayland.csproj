@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="Source.props" />
+  <PropertyGroup>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnableRuntimeMarshalling>true</EnableRuntimeMarshalling>
+  </PropertyGroup>
+  <Import Project="$(AvaloniaSourceRoot)/build/AvaloniaPublicKey.props" />
+  <Import Project="$(AvaloniaSourceRoot)/build/SharedVersion.props" />
+  <ItemGroup>
+    <ProjectReference Include="DevGenerators/DevGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <!-- Backend implementations need Avalonia's internal API, absent from its public reference assemblies. -->
+    <PackageReference Include="Avalonia" Version="12.1.4" ExcludeAssets="compile" GeneratePathProperty="true" />
+    <Reference Include="$(PkgAvalonia)/lib/net10.0/*.dll" />
+    <PackageReference Include="Avalonia.FreeDesktop" Version="12.1.4" />
+    <PackageReference Include="NWayland" Version="0.11.0" />
+    <Compile Include="$(AvaloniaSourceRoot)/src/Avalonia.Wayland/**/*.cs" Exclude="$(AvaloniaSourceRoot)/src/Avalonia.Wayland/obj/**;$(AvaloniaSourceRoot)/src/Avalonia.Wayland/bin/**" />
+    <Compile Include="$(AvaloniaSourceRoot)/src/Shared/RawEventGrouping.cs" />
+    <Compile Include="$(AvaloniaSourceRoot)/src/Avalonia.X11/X11IconLoader.cs" />
+    <Compile Include="$(AvaloniaSourceRoot)/src/Avalonia.X11/Selections/UriListHelper.cs" />
+    <Compile Include="$(AvaloniaSourceRoot)/src/Avalonia.X11/Interop/Glib.cs" />
+    <Compile Include="$(AvaloniaSourceRoot)/src/Avalonia.X11/Dispatching/GlibDispatcherImplBase.cs" />
+    <InternalsVisibleTo Include="Avalonia.Wayland.UnitTests, PublicKey=$(AvaloniaPublicKey)" />
+  </ItemGroup>
+  <Target Name="RequirePatchedWaylandSource" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(AvaloniaSourceRoot)/.esyuscan-patch')" Text="Run 'make restore' to prepare the pinned Avalonia Wayland source patch." />
+  </Target>
+</Project>

@@ -1,0 +1,19 @@
+diff --git a/src/Avalonia.Wayland/Server/Persistent/WSurface.cs b/src/Avalonia.Wayland/Server/Persistent/WSurface.cs
+--- a/src/Avalonia.Wayland/Server/Persistent/WSurface.cs
++++ b/src/Avalonia.Wayland/Server/Persistent/WSurface.cs
+@@ -611,7 +611,13 @@ class WXdgShellSurface : WSurface, IWXdgShellSurface
+     internal class XdgSurfaceListener(WXdgShellSurface p) : XdgSurface.Listener
+     {
+-        protected override void Configure(XdgSurface eventSender, uint serial) =>
+-            p.OnConfigureBatchComplete(serial);
++        protected override void Configure(XdgSurface eventSender, uint serial)
++        {
++            // A queued event can outlive disconnect, or belong to a previous connection.
++            // Do not use cleared globals or configure a replacement surface with its serial.
++            if (!ReferenceEquals(p.XdgSurface, eventSender))
++                return;
++            p.OnConfigureBatchComplete(serial);
++        }
+     }
+ }
+ 

@@ -1,7 +1,11 @@
-.PHONY: build run check check-all test format package install
-build:
+.PHONY: restore build run check check-all test format package install
+.DEFAULT_GOAL := build
+restore:
+	bash scripts/prepare-wayland.sh
+	dotnet restore Scan.slnx --locked-mode --verbosity quiet
+build: restore
 	dotnet build Scan.slnx --no-restore
-run:
+run: restore
 	dotnet run --project src/Scan --no-restore -- open
 check:
 	bash scripts/check.sh

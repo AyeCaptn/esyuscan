@@ -109,7 +109,7 @@ public sealed partial class MainWindow : Window
         finally { confirmingClose = false; }
     }
 
-    private async Task Run(Func<CancellationToken, Task> action)
+    private async Task Run(Func<CancellationToken, Task> action, string? cancelledStatus = null)
     {
         if (model.Busy) return;
         using var cancellation = new CancellationTokenSource();
@@ -117,7 +117,7 @@ public sealed partial class MainWindow : Window
         model.Busy = true;
         model.Error = "";
         try { await action(cancellation.Token); }
-        catch (OperationCanceledException) { model.Status = "Stopped. Completed pages are in temporary storage. Save to keep them."; }
+        catch (OperationCanceledException) { model.Status = cancelledStatus ?? "Stopped. Completed pages are in temporary storage. Save to keep them."; }
         catch (Exception error)
         {
             model.Error = error.Message;
@@ -369,6 +369,33 @@ public sealed partial class MainWindow : Window
     }
 
     private void RotatePage(object? sender, RoutedEventArgs args) => EditSelection(model.RotateSelection);
+    private async void ProcessSelectedPages(object? sender, RoutedEventArgs args) => await AutoProcessPages(allPages: false);
+    private async void ProcessAllPages(object? sender, RoutedEventArgs args) => await AutoProcessPages(allPages: true);
+
+    private async Task AutoProcessPages(bool allPages)
+    {
+        if (editingPage || !model.CanAutoProcess || (!allPages && !model.CanEditSelection)) return;
+        var session = model.Session!;
+        var identities = allPages ? session.Pages.Select(page => page.Identity).ToArray() : model.Selection.Selected.ToArray();
+        var preset = model.SelectedProcessingPreset.Value;
+        this.FindControl<Button>("AutoProcessButton")!.Flyout!.Hide();
+        await Run(async token =>
+        {
+            model.ExportProgress = true;
+            model.Status = $"Deskew + {preset.ToString().ToLowerInvariant()} cleanup · 0 of {identities.Length} pages…";
+            await Task.Run(() => session.AutoProcessPages(identities, preset, token, (completed, total) =>
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (closed || !model.Busy) return;
+                    model.Progress = (double)completed / total;
+                    model.Status = $"Deskew + {preset.ToString().ToLowerInvariant()} cleanup · {completed} of {total} pages…";
+                })), token);
+            model.Status = "Updating processed previews…";
+            await model.SyncProcessedPagesAsync();
+            model.Status = $"Processed {identities.Length} {(identities.Length == 1 ? "page" : "pages")} · deskew + {preset.ToString().ToLowerInvariant()} cleanup. Undo restores the whole operation. Save to keep it.";
+        }, "Automatic processing cancelled. No page edits were applied.");
+    }
+
     private async void DeskewPage(object? sender, RoutedEventArgs args)
     {
         if (!model.CanChangePage) return;

@@ -59,9 +59,9 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         RefreshSelection();
     }
     public void SelectAllPages() { Selection.SelectAll(); RefreshSelection(); }
-    private void RefreshSelection()
+    private void RefreshSelection(Bitmap? renderedPreview = null)
     {
-        SelectedPage = Pages.FirstOrDefault(page => page.Page.Identity == Selection.Focus);
+        SetSelectedPage(Pages.FirstOrDefault(page => page.Page.Identity == Selection.Focus), renderedPreview);
         Notify(nameof(SelectionCount));
         Notify(nameof(Selection));
         NotifyState();
@@ -108,6 +108,14 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<ScanChoice<BitDepth>> Colors { get; } = [];
     public ObservableCollection<int> Resolutions { get; } = [];
     public bool AutoDeskew { get; set; }
+    public ScanChoice<PageCorrection>[] ProcessingPresets { get; } =
+    [new("Document · tones + noise reduction", PageCorrection.Document), new("Photo · tones only", PageCorrection.Photo)];
+    private ScanChoice<PageCorrection>? selectedProcessingPreset;
+    public ScanChoice<PageCorrection> SelectedProcessingPreset
+    {
+        get => selectedProcessingPreset ?? ProcessingPresets[0];
+        set => Set(ref selectedProcessingPreset, value);
+    }
     private object? savedHistory;
     public bool HasUnsavedScans => HasPages && !ReferenceEquals(savedHistory, Session?.HistoryState);
     public void MarkSaved()
@@ -138,6 +146,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
     public bool HasBatch => Session?.Batch is not null;
     public bool CanOpenBatch => !Busy && HasSession && !HasDuplex;
     public bool CanChangePage => CanEdit && SelectedPage is not null;
+    public bool CanAutoProcess => CanEdit && HasPages;
     public bool HasError => Error.Length > 0;
     public bool CanUndo => CanEdit && Session?.CanUndo == true;
     public bool CanRedo => CanEdit && Session?.CanRedo == true;
@@ -235,25 +244,27 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
     public PagePreview? SelectedPage
     {
         get => selectedPage;
-        set
+        set => SetSelectedPage(value);
+    }
+
+    private void SetSelectedPage(PagePreview? value, Bitmap? renderedPreview = null)
+    {
+        if (!Set(ref selectedPage, value, nameof(SelectedPage))) return;
+        if (!syncingPages && value is not null && value.Page.Identity != Selection.Focus)
+            Selection.Select(Pages.IndexOf(value));
+        preview?.Dispose();
+        preview = renderedPreview;
+        if (value is not null && preview is null)
         {
-            if (!Set(ref selectedPage, value)) return;
-            if (!syncingPages && value is not null && value.Page.Identity != Selection.Focus)
-                Selection.Select(Pages.IndexOf(value));
-            preview?.Dispose();
-            preview = null;
-            if (value is not null)
-            {
-                using var stream = PageRenderer.Png(Session!, value.Page);
-                preview = new Bitmap(stream);
-            }
-            Zoom.SetPage(preview?.Size.Width ?? 0, preview?.Size.Height ?? 0);
-            Notify(nameof(Selection));
-            Notify(nameof(SelectionCount));
-            Notify(nameof(Preview));
-            Notify(nameof(PreviewCaption));
-            NotifyState();
+            using var stream = PageRenderer.Png(Session!, value.Page);
+            preview = new Bitmap(stream);
         }
+        Zoom.SetPage(preview?.Size.Width ?? 0, preview?.Size.Height ?? 0);
+        Notify(nameof(Selection));
+        Notify(nameof(SelectionCount));
+        Notify(nameof(Preview));
+        Notify(nameof(PreviewCaption));
+        NotifyState();
     }
     public Bitmap? Preview => preview;
 
@@ -273,7 +284,40 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         Status = HasBatch ? "Recovered batch. Open Batch setup / review to explicitly resume or review; physical scans never restart automatically." : HasDuplex ? "Recovered an unfinished double-sided scan. Review or resume below; all completed pages are saved." : "Scan or import pages, then Save to keep them. Temporary scans are deleted when you close.";
     }
 
-    public void SyncPages(int? selectIndex = null)
+    internal async Task SyncProcessedPagesAsync()
+    {
+        // Processing keeps identities/order fixed. Render off-thread while edits remain disabled.
+        var session = Session!;
+        var pages = session.Pages.ToArray();
+        var focus = Selection.Focus;
+        var rendered = await Task.Run(() =>
+        {
+            var thumbnails = new List<PagePreview>();
+            Bitmap? focusedPreview = null;
+            try
+            {
+                for (var i = 0; i < pages.Length; i++)
+                {
+                    thumbnails.Add(new PagePreview(session, pages[i], i + 1));
+                    if (pages[i].Identity != focus) continue;
+                    using var png = PageRenderer.Png(session, pages[i]);
+                    focusedPreview = new Bitmap(png);
+                }
+                return (Pages: thumbnails.ToArray(), Preview: focusedPreview);
+            }
+            catch
+            {
+                foreach (var thumbnail in thumbnails) thumbnail.Dispose();
+                focusedPreview?.Dispose();
+                throw;
+            }
+        });
+        SyncPagesCore(null, rendered.Pages, rendered.Preview);
+    }
+
+    public void SyncPages(int? selectIndex = null) => SyncPagesCore(selectIndex);
+
+    private void SyncPagesCore(int? selectIndex, IReadOnlyList<PagePreview>? renderedPages = null, Bitmap? renderedPreview = null)
     {
         if (displayedHistory is not null) navigationHistory.AddOrUpdate(displayedHistory, Selection.Snapshot());
         var nextHistory = Session?.HistoryState;
@@ -292,14 +336,14 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
                 var front = state is null ? -1 : Array.IndexOf(state.Fronts, display[i].FileName);
                 var back = backs is null ? -1 : Array.IndexOf(backs, display[i].FileName);
                 var caption = front >= 0 ? $"Front {front + 1}" : back >= 0 ? $"Back {back + 1}" : $"Page {i + 1}";
-                Pages.Add(new PagePreview(Session, display[i], i + 1, caption));
+                Pages.Add(renderedPages?[i] ?? new PagePreview(Session, display[i], i + 1, caption));
             }
         }
         Selection.Reconcile(Pages.Select(page => page.Page.Identity), restore);
         // Explicit index is reserved for callers requesting navigation, not identity recovery.
         if (selectIndex is not null && Pages.Count > 0) Selection.Select(Math.Clamp(selectIndex.Value, 0, Pages.Count - 1));
         displayedHistory = nextHistory;
-        RefreshSelection();
+        RefreshSelection(renderedPreview);
         syncingPages = false;
         Notify(nameof(HasUnsavedScans));
         Notify(nameof(SessionName));
@@ -313,7 +357,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         Notify(nameof(CanRefreshScanners));
         Notify(nameof(CanRefreshOcr));
-        foreach (var name in new[] { nameof(CanCancelPrint), nameof(HasBatch), nameof(CanOpenBatch), nameof(CanEditSelection), nameof(CanRemoveManualDevice), nameof(CanEditCustomSize), nameof(CanChooseOcrLanguage), nameof(IndeterminateProgress), nameof(CanUpdatePreset), nameof(CanSavePreset), nameof(CanManagePreset), nameof(CanApplyPreset), nameof(CanChangeScanSettings), nameof(CanEdit), nameof(CanConfigure), nameof(ShowScanFronts), nameof(ShowScanBacks), nameof(HasDuplex), nameof(IsDuplexReview), nameof(CanStartDuplex), nameof(CanScanDuplex), nameof(CanScanFronts), nameof(CanScanBacks), nameof(CanApplyDuplex), nameof(CanScan), nameof(CanExport), nameof(CanChangePage), nameof(HasSession), nameof(CanUndo), nameof(CanRedo) })
+        foreach (var name in new[] { nameof(CanAutoProcess), nameof(CanCancelPrint), nameof(HasBatch), nameof(CanOpenBatch), nameof(CanEditSelection), nameof(CanRemoveManualDevice), nameof(CanEditCustomSize), nameof(CanChooseOcrLanguage), nameof(IndeterminateProgress), nameof(CanUpdatePreset), nameof(CanSavePreset), nameof(CanManagePreset), nameof(CanApplyPreset), nameof(CanChangeScanSettings), nameof(CanEdit), nameof(CanConfigure), nameof(ShowScanFronts), nameof(ShowScanBacks), nameof(HasDuplex), nameof(IsDuplexReview), nameof(CanStartDuplex), nameof(CanScanDuplex), nameof(CanScanFronts), nameof(CanScanBacks), nameof(CanApplyDuplex), nameof(CanScan), nameof(CanExport), nameof(CanChangePage), nameof(HasSession), nameof(CanUndo), nameof(CanRedo) })
             Notify(name);
     }
 

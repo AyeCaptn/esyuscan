@@ -40,8 +40,9 @@ The preview toolbar shows selection counts; an accent outline marks the focused 
 The vertical thumbnail sidebar stays to the left of the document. Arrow keys or
 Page Up/Down browse pages outside text fields and pickers; Home/End goes to the
 first/last page. Shift extends selection and Ctrl+arrow moves only the preview focus.
-Rotate and Remove apply to the selection in one undoable step. Crop and Deskew
-apply to the focused page. Drag a selected thumbnail to move the whole selection,
+Rotate and Remove apply to the selection in one undoable step. **Auto process…**
+can process selected pages or every loaded page. Crop and Deskew apply to the
+focused page. Drag a selected thumbnail to move the whole selection,
 or use Alt+Left/Right. Pages keep their document order inside the moved block.
 Import retains selection; undo/redo recover selection and focus with the document.
 
@@ -177,6 +178,18 @@ current pages, including separators. See [batch setup, recovery, grouping and
 export details](batch-scanning.md).
 
 ## Deskew and crop
+
+Choose **Auto process…** (Ctrl+Shift+A), select **Document** cleanup (default) or
+**Photo** cleanup, then **Process selected pages** or **Process all loaded pages**.
+Each page is deskewed from its original and gets the chosen automatic correction.
+Document adjusts tones and reduces noise; Photo adjusts tones only. They are
+alternative presets, not stacked filters. Crops, orientation, flips and manual
+tone/sharpening settings are kept; the deskew angle and cleanup mode are replaced.
+Review crop edges after deskew. Processing runs sequentially in the background
+with progress and **Cancel operation**. Cancellation or a processing failure
+before commit leaves every page unchanged. One Undo restores the entire operation.
+Preview refresh finishes after commit. Save to keep the results; processing PDF
+pages uses raster images for export while retaining their original PDF sources.
 
 **Settings → Auto-deskew scans** passes `ScanOptions.AutoDeskew` to NAPS2 SDK 1.6.0.
 It is off by default and affects subsequent scans. The SDK straightens the scan
@@ -428,6 +441,7 @@ tray it selects pages rather than scanning. **F6** scans from any control when r
 | Ctrl+arrows / Ctrl+Space | Move tray focus / toggle focused page |
 | Ctrl+Plus / Ctrl+Minus / Ctrl+0 | Zoom in / out / fit page |
 | R / C / A / K | Rotate selection / crop / adjust / deskew focused page |
+| Ctrl+Shift+A | Auto process: deskew + Document/Photo cleanup, selected/all loaded pages |
 | Alt+Left / Alt+Right | Move selected block |
 | Delete | Remove selected pages, keeping originals |
 | Ctrl+Z / Ctrl+Shift+Z | Undo / redo |

@@ -96,6 +96,7 @@ public sealed partial class MainWindow
         Button("C", "CropButton", "Crop page", "Pages", true);
         Button("A", "AdjustButton", "Adjust page", "Pages", true);
         Button("K", "DeskewButton", "Deskew page", "Pages", true);
+        Button("Ctrl+Shift+A", "AutoProcessButton", "Auto process selected / all pages", "Pages");
         Button("Delete", "RemoveButton", "Remove selected pages (undoable)", "Pages", true);
         Button("Alt+Left", "MoveEarlierButton", "Move selected pages earlier", "Pages");
         Button("Alt+Right", "MoveLaterButton", "Move selected pages later", "Pages");

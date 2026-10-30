@@ -107,6 +107,7 @@ public sealed partial class MainWindow
         Button("Ctrl+0", "FitPageButton", "Fit page", "Preview", true);
         Button("Ctrl+NumPad0", "FitPageButton", "Fit page (number pad)", "Preview");
 
+        Button("Ctrl+C", "CopyPageButton", "Copy current page as an image", "Output and processing");
         Button("Ctrl+S", "CombinedExportButton", "Save scans", "Output and processing", true);
         Button("Ctrl+Shift+S", "SeparatePdfsButton", "Export separate PDFs", "Output and processing", true);
         Button("Ctrl+Shift+I", "ImagesExportButton", "Export separate images", "Output and processing", true);

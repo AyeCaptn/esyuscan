@@ -275,6 +275,7 @@
             <Grid Margin="12,4" ColumnDefinitions="Auto,*">
               <TextBlock x:Name="SelectionCountText" Text="{Binding SelectionCount}" FontSize="10" Classes="muted" VerticalAlignment="Center" Margin="0,0,8,0" />
               <WrapPanel x:Name="PageToolbar" Grid.Column="1" HorizontalAlignment="Right" MaxWidth="700">
+                <Button x:Name="CopyPageButton" Content="Copy" Classes="quiet" Click="CopyPage" IsEnabled="{Binding CanChangePage}" ToolTip.Tip="Copy the currently previewed page as a full-resolution image, including edits · Ctrl+C" />
                 <Button x:Name="UndoButton" Content="↶" Click="Undo" IsEnabled="{Binding CanUndo}" Classes="quiet" ToolTip.Tip="Undo · Ctrl+Z" />
                 <Button x:Name="RedoButton" Content="↷" Click="Redo" IsEnabled="{Binding CanRedo}" Classes="quiet" ToolTip.Tip="Redo · Ctrl+Shift+Z" />
                 <Button x:Name="AutoProcessButton" Content="Auto process…" IsEnabled="{Binding CanAutoProcess}" Classes="quiet"

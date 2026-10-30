@@ -35,6 +35,11 @@ Images and multipage TIFF contain pixels only. See [searchable PDF setup](search
 
 ## Page selection and preview
 
+Choose **Copy** or press **Ctrl+C** to copy the currently previewed page as a
+full-resolution image, including its edits. Paste into an app that accepts images
+with **Ctrl+V**. Copy uses one page regardless of the selection or export scope;
+it does not save the scans. In text fields, Ctrl+C still copies selected text.
+
 Ctrl+click toggles thumbnails, Shift+click selects a range, and Ctrl+A selects all.
 The preview toolbar shows selection counts; an accent outline marks the focused preview.
 The vertical thumbnail sidebar stays to the left of the document. Arrow keys or
@@ -424,6 +429,7 @@ tray it selects pages rather than scanning. **F6** scans from any control when r
 | Space / F6 | Scan (Space only outside controls and the page tray) |
 | Ctrl+N / Ctrl+O | New scans / import files |
 | Ctrl+I | Import PDFs or images |
+| Ctrl+C | Copy the current page as an image (outside text fields) |
 | Ctrl+S / Ctrl+Shift+S / Ctrl+Shift+I | Save chosen file type / separate PDFs / separate images |
 | Ctrl+P / Ctrl+M | Print / prepare email PDF |
 | Ctrl+Shift+P | Cancel last print job |

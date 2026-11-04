@@ -19,6 +19,10 @@ save them as PDF, PNG, JPEG or TIFF. New and closing remove temporary scans;
 Import adds one or more existing documents. Optional OCR uses an installed Tesseract.
 The scanning and document backend is the unmodified NAPS2 SDK.
 
+Crop, rotate and adjust pages, or use **Auto process…** for automatic deskew and
+document or photo cleanup. **Copy** (Ctrl+C) copies the current edited page as a
+full-resolution image for pasting into another app.
+
 The screenshot uses generated demo pages, not private documents or scanner IDs.
 
 ## Build and run

@@ -364,7 +364,8 @@ Tests use generated documents, temporary directories, and a headless renderer.
 To regenerate the screenshot with fictional content:
 
 ```sh
-ESYUSCAN_SCREENSHOT_DIR="$PWD/docs" make test ARGS='--filter FullyQualifiedName~RenderDocumentWorkspace'
+ESYUSCAN_SCREENSHOT_DIR="$PWD/artifacts/screenshots" make test ARGS='--filter FullyQualifiedName~RenderDocumentWorkspace'
+cp artifacts/screenshots/esyuscan-1280-ready.png docs/esyuscan.png
 ```
 
 `NativeText.cs` makes Avalonia and GTK use the same system HarfBuzz on Linux.

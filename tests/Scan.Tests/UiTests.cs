@@ -907,7 +907,7 @@ public sealed class UiTests : TestFiles
         model.SetCapabilities(model.SelectedDevice!, ScanTestData.Caps());
         model.PresetName = "Office documents";
         model.SavePreset();
-        model.Status = busy ? "Exporting document… 4 of 8 pages" : "8 pages saved. Choose separate files or one document.";
+        model.Status = busy ? "Saving document… 4 of 8 pages" : "8 pages ready. Save to keep them.";
         model.SetOcrAvailability(new(true, ["eng"], "OCR ready · 1 language: eng"));
         model.SearchablePdf = true;
         model.Busy = busy;
